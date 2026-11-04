@@ -16,6 +16,7 @@ DEMO_LIFETIME = timedelta(days=2)
 SYNC_STALE_AFTER = timedelta(minutes=10)
 # How long a request waits for the first database connection before giving up.
 POOL_OPEN_TIMEOUT = 10
+USER_COLUMNS = "id, email, is_demo, password_changed_at, password_hash IS NOT NULL AS has_password"
 DOCUMENT_COLUMNS = "id, user_id, filename, mime, size, sha256, doc_type, status, error, fields, crm, created_at, updated_at"
 
 SCHEMA = """
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     hits INTEGER NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL
 );
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
 """
 
 
@@ -123,23 +125,35 @@ class Store:
         with self._connect() as db:
             return db.execute(
                 "INSERT INTO users (id, email, password_hash) VALUES (%s, %s, %s) "
-                "ON CONFLICT (email) DO NOTHING RETURNING id, email, is_demo",
+                f"ON CONFLICT (email) DO NOTHING RETURNING {USER_COLUMNS}",
                 (uuid.uuid4(), email.lower(), hash_password(password)),
             ).fetchone()
 
     def authenticate(self, email, password):
         with self._connect() as db:
             user = db.execute(
-                "SELECT id, email, is_demo, password_hash FROM users WHERE email = %s", (email.lower(),)
+                f"SELECT {USER_COLUMNS}, password_hash FROM users WHERE email = %s", (email.lower(),)
             ).fetchone()
         stored = user["password_hash"] if user and user["password_hash"] else _DUMMY_HASH
         if not verify_password(password, stored) or not user or not user["password_hash"]:
             return None
-        return {key: user[key] for key in ("id", "email", "is_demo")}
+        return {key: value for key, value in user.items() if key != "password_hash"}
 
     def get_user(self, user_id):
         with self._connect() as db:
-            return db.execute("SELECT id, email, is_demo FROM users WHERE id = %s", (user_id,)).fetchone()
+            return db.execute(f"SELECT {USER_COLUMNS} FROM users WHERE id = %s", (user_id,)).fetchone()
+
+    @staticmethod
+    def _end_sessions(db, user_id):
+        """Tokens issued before now stop working."""
+        db.execute("UPDATE users SET password_changed_at = %s WHERE id = %s", (datetime.now(timezone.utc), user_id))
+
+    def set_password(self, user_id, password):
+        with self._connect() as db:
+            db.execute(
+                "UPDATE users SET password_hash = %s WHERE id = %s AND NOT is_demo", (hash_password(password), user_id)
+            )
+            self._end_sessions(db, user_id)
 
     def create_demo_user(self, documents):
         """A private demo account with the sample documents already read. It can't be signed into with a password."""
@@ -151,7 +165,7 @@ class Store:
             )
             db.execute("DELETE FROM rate_limits WHERE expires_at < now()")
             user = db.execute(
-                "INSERT INTO users (id, email, is_demo) VALUES (%s, %s, true) RETURNING id, email, is_demo",
+                f"INSERT INTO users (id, email, is_demo) VALUES (%s, %s, true) RETURNING {USER_COLUMNS}",
                 (user_id, f"demo-{user_id.hex[:12]}@inkfold.demo"),
             ).fetchone()
             for document in documents:

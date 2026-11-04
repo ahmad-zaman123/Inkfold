@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { api, getToken, setToken, whenSessionExpires } from './api.js'
 import Header from './components/Header.jsx'
+import Account from './pages/Account.jsx'
 import Auth from './pages/Auth.jsx'
 import Documents from './pages/Documents.jsx'
 import Landing from './pages/Landing.jsx'
@@ -28,9 +29,13 @@ export default function App() {
       .finally(() => setChecking(false))
   }, [signOut])
 
-  function signedIn(session) {
+  function applySession(session) {
     setToken(session.token)
     setUser(session.user)
+  }
+
+  function signedIn(session) {
+    applySession(session)
     navigate('/')
   }
 
@@ -47,6 +52,7 @@ export default function App() {
           <Route path="/" element={user ? <Documents user={user} /> : <Landing onDemo={signedIn} />} />
           <Route path="/login" element={user ? <Navigate to="/" replace /> : <Auth mode="login" onSignedIn={signedIn} />} />
           <Route path="/register" element={user ? <Navigate to="/" replace /> : <Auth mode="register" onSignedIn={signedIn} />} />
+          <Route path="/account" element={signedInOnly(<Account user={user} onSession={applySession} />)} />
           <Route path="/documents/:id" element={signedInOnly(<Review />)} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

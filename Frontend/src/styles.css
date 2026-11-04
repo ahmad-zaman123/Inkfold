@@ -115,6 +115,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .banner.error { background: var(--error-soft); color: var(--error); border-color: color-mix(in srgb, var(--error) 25%, transparent); }
 .banner.warn { background: var(--warn-soft); color: var(--warn); border-color: var(--warn-rule); }
 .banner.info { background: var(--accent-soft); color: var(--ink); }
+.banner.success { background: var(--ok-soft); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 25%, transparent); }
 .hint { color: var(--muted); font-size: 0.88rem; margin: 8px 0 0; min-height: 1.3em; }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
 .pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
@@ -168,6 +169,8 @@ button, input, textarea { font: inherit; color: inherit; }
 .auth-card h1 { font-size: 1.5rem; margin-bottom: 12px; }
 .auth-card input { margin-bottom: 8px; }
 .auth-card .button { margin-top: 10px; }
+.account-email { color: var(--ink-2); margin: 0 0 10px; overflow-wrap: anywhere; }
+.account-heading { font-size: 1.05rem; margin: 6px 0 4px; }
 .switch { color: var(--muted); font-size: 0.92rem; margin: 14px 0 0; }
 
 /* Inputs */

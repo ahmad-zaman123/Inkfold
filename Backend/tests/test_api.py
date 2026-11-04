@@ -4,13 +4,14 @@ import time
 from datetime import timedelta
 from pathlib import Path
 
+import jwt
 import psycopg
 import pytest
 from google.genai import errors
 
 from app.demo_data import DEMO_DOCUMENTS
 from app.sync import SIGNATURE_HEADER, TIMESTAMP_HEADER, signed_headers
-from conftest import EXTRACTION, N8N_URL, SECRET, sign_in
+from conftest import EXTRACTION, N8N_URL, SECRET, make_settings, sign_in
 
 SAMPLES = Path(__file__).resolve().parents[2] / "samples"
 PNG = b"\x89PNG\r\n\x1a\n" + b"card-bytes"
@@ -59,6 +60,60 @@ def test_short_password_is_refused_without_echoing_it(client):
 def test_requests_need_a_valid_token(client):
     assert client.get("/api/documents").status_code == 401
     assert client.get("/api/documents", headers={"Authorization": "Bearer nonsense"}).status_code == 401
+
+
+def old_token(client, auth, seconds_ago=60):
+    """The same user's token, issued a little while back."""
+    user_id = client.get("/api/me", headers=auth).json()["id"]
+    now = int(time.time())
+    token = jwt.encode({"sub": user_id, "iat": now - seconds_ago, "exp": now + 3600}, make_settings("")["jwt_secret"], algorithm="HS256")
+    return {"Authorization": "Bearer " + token}
+
+
+def change_password(client, auth, current="correct-horse-battery", new="a-brand-new-secret"):
+    return client.post("/api/me/password", json={"current_password": current, "new_password": new}, headers=auth)
+
+
+def test_change_password_ends_older_sessions_and_keeps_this_one(client, auth):
+    earlier = old_token(client, auth)
+    assert client.get("/api/me", headers=earlier).json()["has_password"] is True
+    response = change_password(client, auth)
+    assert response.status_code == 200, response.text
+    fresh = {"Authorization": "Bearer " + response.json()["token"]}
+    assert client.get("/api/me", headers=fresh).status_code == 200
+    assert client.get("/api/me", headers=earlier).status_code == 401
+    login = lambda password: client.post("/api/auth/login", json={"email": "sara@example.com", "password": password}).status_code
+    assert login("correct-horse-battery") == 401
+    assert login("a-brand-new-secret") == 200
+
+
+def test_change_password_needs_the_current_one(client, auth):
+    response = change_password(client, auth, current="not-my-password")
+    assert response.status_code == 400 and response.json() == {"detail": "Your current password is not correct."}
+    assert client.post("/api/me/password", json={"new_password": "a-brand-new-secret"}, headers=auth).status_code == 400
+    assert client.post("/api/auth/login", json={"email": "sara@example.com", "password": "correct-horse-battery"}).status_code == 200
+
+
+def test_new_password_must_be_long_enough_and_is_not_echoed(client, auth):
+    response = change_password(client, auth, new="tiny7ch")
+    assert response.status_code == 422 and "tiny7ch" not in response.text
+
+
+def test_guessing_the_current_password_is_rate_limited(client, auth):
+    codes = [change_password(client, auth, current=f"guess-{n}").status_code for n in range(11)]
+    assert codes[:10] == [400] * 10 and codes[10] == 429
+    # The limit is per account, so another person isn't affected.
+    other = sign_in(client, "omar@example.com")
+    assert change_password(client, other).status_code == 200
+
+
+def test_demo_accounts_cannot_set_a_password(client):
+    session = client.post("/api/auth/demo").json()
+    assert session["user"]["has_password"] is False
+    auth = {"Authorization": "Bearer " + session["token"]}
+    response = client.post("/api/me/password", json={"new_password": "a-brand-new-secret"}, headers=auth)
+    assert response.status_code == 403
+    assert client.post("/api/auth/login", json={"email": session["user"]["email"], "password": "a-brand-new-secret"}).status_code == 401
 
 
 def test_demo_opens_a_private_account_with_the_samples(client, gemini):

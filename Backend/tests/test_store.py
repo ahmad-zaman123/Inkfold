@@ -1,5 +1,6 @@
 import socket
 
+import psycopg
 import pytest
 from psycopg_pool import PoolTimeout
 
@@ -25,3 +26,12 @@ def test_a_failed_first_connection_is_retried_on_the_next_request(store, databas
         assert broken.get_user("00000000-0000-0000-0000-000000000000") is None
     finally:
         broken.close()
+
+
+def test_init_schema_adds_new_columns_to_an_existing_database(store, database_url):
+    with psycopg.connect(database_url, autocommit=True) as db:
+        db.execute("ALTER TABLE users DROP COLUMN password_changed_at")
+    store.init_schema()
+    store.init_schema()
+    user = store.create_user("sara@example.com", "correct-horse-battery")
+    assert user["password_changed_at"] is None and user["has_password"] is True

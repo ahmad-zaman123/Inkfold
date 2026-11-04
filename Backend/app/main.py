@@ -41,6 +41,7 @@ RATE_LIMITS = {
     "demo_all": (500, timedelta(days=1), "The demo is full for today. Please try again tomorrow."),
     "upload_user": (None, timedelta(days=1), "You've reached today's upload limit. Please try again tomorrow."),
     "upload_all": (None, timedelta(days=1), "Uploads are full for today. Please try again tomorrow."),
+    "password_change": (10, timedelta(minutes=15), "Too many attempts. Please try again in a few minutes."),
     "sync_user": (20, timedelta(days=1), "You've sent a lot to HubSpot today. Please try again tomorrow."),
 }
 SIGNATURES = (
@@ -68,6 +69,11 @@ class Credentials(BaseModel):
 class Registration(BaseModel):
     email: EmailStr
     password: StorableText = Field(min_length=8, max_length=200)
+
+
+class PasswordChange(BaseModel):
+    current_password: StorableText | None = Field(default=None, max_length=200)
+    new_password: StorableText = Field(min_length=8, max_length=200)
 
 
 class FieldEdits(BaseModel):
@@ -203,7 +209,7 @@ def create_app(settings=None, *, store=None, gemini_client=None, http_client=Non
         return {"token": token, "user": public_user(user)}
 
     def public_user(user):
-        return {"id": str(user["id"]), "email": user["email"], "is_demo": user["is_demo"]}
+        return {"id": str(user["id"]), "email": user["email"], "is_demo": user["is_demo"], "has_password": user["has_password"]}
 
     def current_user(authorization: str = Header(default="")):
         scheme, _, token = authorization.partition(" ")
@@ -215,6 +221,10 @@ def create_app(settings=None, *, store=None, gemini_client=None, http_client=Non
         except (jwt.InvalidTokenError, KeyError, ValueError):
             raise HTTPException(status_code=401, detail="Not signed in")
         if user is None:
+            raise HTTPException(status_code=401, detail="Not signed in")
+        # Whole seconds, like iat, so a token issued in the same second as the change still works.
+        changed = user["password_changed_at"]
+        if changed and claims.get("iat", 0) < int(changed.timestamp()):
             raise HTTPException(status_code=401, detail="Not signed in")
         return user
 
@@ -260,6 +270,17 @@ def create_app(settings=None, *, store=None, gemini_client=None, http_client=Non
     @app.get("/api/me")
     def me(user=Depends(current_user)):
         return public_user(user)
+
+    @app.post("/api/me/password")
+    def change_password(body: PasswordChange, user=Depends(current_user)):
+        if user["is_demo"]:
+            raise HTTPException(status_code=403, detail="The demo account has no password.")
+        enforce_limit("password_change", user["id"])
+        if user["has_password"] and store.authenticate(user["email"], body.current_password or "") is None:
+            raise HTTPException(status_code=400, detail="Your current password is not correct.")
+        store.set_password(user["id"], body.new_password)
+        # Every older session just ended, so this one needs a new token to carry on.
+        return session_for(store.get_user(user["id"]))
 
     @app.post("/api/documents", status_code=201)
     def upload(response: Response, file: UploadFile = File(...), user=Depends(current_user)):

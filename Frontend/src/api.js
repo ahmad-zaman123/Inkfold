@@ -5,6 +5,7 @@ const GENERIC_ERROR = 'Something went wrong. Please try again.'
 const FIELD_ERRORS = {
   email: 'Please enter a valid email address.',
   password: 'Passwords must be between 8 and 200 characters.',
+  new_password: 'Passwords must be between 8 and 200 characters.',
 }
 
 export function getToken() {
@@ -67,6 +68,8 @@ export const api = {
   login: (email, password) => request('/auth/login', { method: 'POST', json: { email, password } }),
   demo: () => request('/auth/demo', { method: 'POST' }),
   me: () => request('/me'),
+  changePassword: (current_password, new_password) =>
+    request('/me/password', { method: 'POST', json: { current_password, new_password } }),
   documents: () => request('/documents'),
   document: (id) => request(`/documents/${id}`),
   upload(file) {
