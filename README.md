@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
   <img src="https://img.shields.io/badge/HubSpot-CRM%20API-FF7A59?logo=hubspot&logoColor=white&style=flat-square" alt="HubSpot" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-205%20passing-2ea44f?style=flat-square" alt="205 tests passing" />
+  <img src="https://img.shields.io/badge/tests-206%20passing-2ea44f?style=flat-square" alt="206 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -87,7 +87,7 @@ To send records through n8n instead of straight to HubSpot, see [`n8n/README.md`
 **4. Tests**
 
 ```bash
-cd Backend && .venv/bin/python -m pytest      # 195 tests, real Postgres, fake Gemini and HubSpot
+cd Backend && .venv/bin/python -m pytest      # 196 tests, real Postgres, fake Gemini and HubSpot
 node --test n8n/test/*.test.mjs                # 10 tests for the n8n Code nodes
 Backend/.venv/bin/python n8n/test/e2e.py       # API + n8n + fake HubSpot round trip
 ```
@@ -115,7 +115,7 @@ No test calls Gemini or HubSpot, so none of them need keys.
 | `SMTP_HOST`, `SMTP_PORT`, `EMAIL_FROM` | no | Default to Gmail (`smtp.gmail.com`, `587`) and the `SMTP_USER` address. |
 | `GOOGLE_CLIENT_ID` | for Google | A Google OAuth web client ID. Turns on Continue with Google. Set the same value as `VITE_GOOGLE_CLIENT_ID` on the frontend. |
 | `UPLOADS_PER_USER_DAY`, `UPLOADS_PER_DAY` | no | Upload limits, which emailed documents count against too. Default 10 per user and 100 in total per day. |
-| `INTAKE_EMAIL`, `INTAKE_PASSWORD` | for email in | The inbox that forwarded documents arrive in, and its password. For Gmail, use a new account and an [app password](https://myaccount.google.com/apppasswords). Without them, email intake is hidden. |
+| `INTAKE_EMAIL`, `INTAKE_PASSWORD` | for email in | The inbox that forwarded documents arrive in, and its password. For Gmail, use an [app password](https://myaccount.google.com/apppasswords). It can be an account you use for other things: only mail sent to its `+` addresses is read or marked read. Without them, email intake is hidden. |
 | `INTAKE_IMAP_HOST` | no | Defaults to `imap.gmail.com`. Any IMAP inbox that delivers `name+anything@` addresses works. |
 | `INTAKE_POLL_SECRET` | no | Lets the scheduled job check the inbox. Without it, mail is read when someone presses **Check inbox now**. |
 
@@ -270,7 +270,7 @@ Inkfold/
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              195 tests against a real Postgres
+│   ├── tests/              196 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json

@@ -168,8 +168,13 @@ class FakeInbox:
             raise OSError("Connection refused")
         yield self
 
-    def unread(self, limit):
-        return [uid for uid, (_, read) in self.messages.items() if not read][:limit]
+    def unread(self):
+        return [uid for uid, (_, read) in self.messages.items() if not read]
+
+    def recipients(self, uids):
+        from app.intake import recipients_in_headers
+
+        return {uid: recipients_in_headers(self.messages[uid][0]) for uid in uids}
 
     def fetch(self, uid):
         return self.messages[uid][0]

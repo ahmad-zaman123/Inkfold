@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from email.message import EmailMessage
 
 import psycopg
@@ -175,12 +176,24 @@ def test_the_same_file_in_a_new_email_is_spotted_as_a_duplicate(intake_client, i
     assert gemini.calls == 1
 
 
-def test_mail_to_unknown_addresses_is_ignored_and_marked_read(intake_client, inbox, auth, gemini):
-    inbox.add(email_to(INBOX, attachments=[pdf()]))
-    inbox.add(email_to(address_for(INBOX, "unknown12345"), attachments=[pdf()]))
-    assert check(intake_client, auth)["handled"] == 2
-    assert inbox.unread_count() == 0 and gemini.calls == 0 and documents(intake_client, auth) == []
+def test_mail_to_unknown_intake_addresses_is_ignored_and_marked_read(intake_client, inbox, auth, gemini):
+    uid = inbox.add(email_to(address_for(INBOX, "unknown12345"), attachments=[pdf()]))
+    assert check(intake_client, auth)["handled"] == 1
+    assert inbox.messages[uid][1] is True and gemini.calls == 0 and documents(intake_client, auth) == []
     assert check(intake_client, auth)["recent"] == []
+
+
+def test_the_inboxs_other_mail_is_left_unread_and_unrecorded(intake_client, inbox, auth, gemini, database_url):
+    # The inbox can be a working account: its own mail must stay as it was.
+    personal = [inbox.add(email_to(INBOX, subject=f"Personal {n}", body=LEAD)) for n in range(25)]
+    personal.append(inbox.add(email_to("someone.else@example.com", subject="Newsletter", body=LEAD)))
+    ours = inbox.add(email_to(my_address(intake_client, auth), attachments=[pdf()]))
+    assert check(intake_client, auth)["handled"] == 1
+    assert inbox.messages[ours][1] is True
+    assert not any(inbox.messages[uid][1] for uid in personal)
+    assert gemini.calls == 1
+    with psycopg.connect(database_url) as db:
+        assert db.execute("SELECT count(*) FROM intake_messages").fetchone()[0] == 1
 
 
 def test_mail_only_reaches_the_account_it_was_sent_to(intake_client, inbox):
@@ -321,6 +334,11 @@ def test_the_imap_mailbox_peeks_then_marks_read(monkeypatch):
             calls.append((command, *args))
             if command == "SEARCH":
                 return "OK", [b"7 9"]
+            if command == "FETCH" and "HEADER.FIELDS" in args[1]:
+                return "OK", [
+                    (b"1 (UID 7 BODY[HEADER.FIELDS (TO)] {40}", b"To: inkfold.intake+abc123xyz9@gmail.com\r\n\r\n"), b")",
+                    (b"2 (UID 9 BODY[HEADER.FIELDS (TO)] {30}", b"To: friend@example.com\r\n\r\n"), b")",
+                ]
             if command == "FETCH":
                 return "OK", [(b"7 (UID 7 BODY[] {5}", b"raw-7"), b")"]
             return "OK", [None]
@@ -329,11 +347,15 @@ def test_the_imap_mailbox_peeks_then_marks_read(monkeypatch):
             calls.append(("logout",))
 
     monkeypatch.setattr(intake.imaplib, "IMAP4_SSL", FakeIMAP)
+    since = (date.today() - timedelta(days=7)).strftime("%d-%b-%Y")
     with intake.ImapMailbox("imap.test", INBOX, "app-password").session() as session:
-        assert session.unread(limit=1) == [b"7"]
+        assert session.unread() == [b"7", b"9"]
+        assert session.recipients([b"7", b"9"]) == {b"7": ["inkfold.intake+abc123xyz9@gmail.com"], b"9": ["friend@example.com"]}
         assert session.fetch(b"7") == b"raw-7"
         session.mark_read(b"7")
     assert calls == [
         ("connect", "imap.test", 993), ("login", INBOX), ("select", "INBOX"),
-        ("SEARCH", None, "UNSEEN"), ("FETCH", b"7", "(BODY.PEEK[])"), ("STORE", b"7", "+FLAGS", "(\\Seen)"), ("logout",),
+        ("SEARCH", None, "UNSEEN", "SINCE", since),
+        ("FETCH", b"7,9", "(UID BODY.PEEK[HEADER.FIELDS (DELIVERED-TO X-ORIGINAL-TO ENVELOPE-TO TO CC)])"),
+        ("FETCH", b"7", "(BODY.PEEK[])"), ("STORE", b"7", "+FLAGS", "(\\Seen)"), ("logout",),
     ]

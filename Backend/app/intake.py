@@ -11,6 +11,7 @@ import imaplib
 import re
 import secrets
 import string
+from datetime import date, timedelta
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from email import policy
@@ -27,6 +28,9 @@ MIN_BODY_CHARACTERS = 40
 MAX_BODY_CHARACTERS = 50_000
 RECIPIENT_HEADERS = ("Delivered-To", "X-Original-To", "Envelope-To", "To", "Cc")
 GMAIL_DOMAINS = ("gmail.com", "googlemail.com")
+# Only recent unread mail is looked at, so a busy inbox with old unread mail stays quick to check.
+RECENT_DAYS = 7
+MAX_CANDIDATES = 300
 
 
 def new_token():
@@ -54,6 +58,16 @@ def token_for(recipients, inbox):
         if plus and domain == inbox_domain and _local_key(base, domain) == wanted and re.fullmatch(r"[a-z0-9]{6,40}", token):
             return token
     return None
+
+
+def recipients_of(message):
+    """Every address the email was delivered or sent to, from its headers."""
+    values = [str(value) for header in RECIPIENT_HEADERS for value in message.get_all(header, [])]
+    return [address for _, address in getaddresses(values) if address]
+
+
+def recipients_in_headers(raw_headers):
+    return recipients_of(email.message_from_bytes(raw_headers, policy=policy.default))
 
 
 @dataclass
@@ -111,10 +125,7 @@ def _safe_name(subject):
 
 def parse_message(raw):
     message = email.message_from_bytes(raw, policy=policy.default)
-    recipients = []
-    for header in RECIPIENT_HEADERS:
-        values = [str(value) for value in message.get_all(header, [])]
-        recipients += [address for _, address in getaddresses(values) if address]
+    recipients = recipients_of(message)
     # The Message-ID keeps one email from being read twice. A hash stands in if it's missing.
     key = str(message.get("Message-ID") or "").strip() or "sha256:" + hashlib.sha256(raw).hexdigest()
     sender = getaddresses([str(message.get("From", ""))])
@@ -158,12 +169,30 @@ class _Session:
     def __init__(self, imap):
         self.imap = imap
 
-    def unread(self, limit):
-        """Ids of the oldest unread messages, oldest first."""
-        status, data = self.imap.uid("SEARCH", None, "UNSEEN")
+    def unread(self):
+        """Ids of recent unread messages, oldest first."""
+        since = (date.today() - timedelta(days=RECENT_DAYS)).strftime("%d-%b-%Y")
+        status, data = self.imap.uid("SEARCH", None, "UNSEEN", "SINCE", since)
         if status != "OK":
             raise imaplib.IMAP4.error("Search failed")
-        return (data[0] or b"").split()[:limit]
+        return (data[0] or b"").split()[-MAX_CANDIDATES:]
+
+    def recipients(self, uids):
+        """{uid: addresses}, read from the headers alone, so the inbox's other mail isn't downloaded."""
+        if not uids:
+            return {}
+        status, data = self.imap.uid(
+            "FETCH", b",".join(uids), "(UID BODY.PEEK[HEADER.FIELDS (DELIVERED-TO X-ORIGINAL-TO ENVELOPE-TO TO CC)])"
+        )
+        if status != "OK":
+            raise imaplib.IMAP4.error("Fetch failed")
+        found = {}
+        for part in data:
+            if isinstance(part, tuple):
+                match = re.search(rb"UID (\d+)", part[0])
+                if match:
+                    found[match.group(1)] = recipients_in_headers(part[1])
+        return found
 
     def fetch(self, uid):
         # PEEK leaves the message unread until it has been handled.

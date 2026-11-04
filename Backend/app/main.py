@@ -491,11 +491,15 @@ def create_app(
         return len(files)
 
     def check_inbox():
-        """Read the oldest unread emails, up to a few documents' worth. Returns how many emails were handled."""
+        """Read the oldest unread intake emails, up to a few documents' worth. Returns how many were handled."""
         budget, handled = MAX_DOCUMENTS_PER_CHECK, 0
         try:
             with mailbox.session() as session:
-                for uid in session.unread(limit=20):
+                unread = session.unread()
+                recipients = session.recipients(unread)
+                # Only mail sent to a plus address is Inkfold's. Anything else in the inbox is left as it was.
+                ours = [uid for uid in unread if token_for(recipients.get(uid, []), intake["inbox"])]
+                for uid in ours[:20]:
                     used = read_email(session.fetch(uid), budget)
                     if used is None:
                         if budget < MAX_DOCUMENTS_PER_CHECK:
