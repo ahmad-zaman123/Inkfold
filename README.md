@@ -115,7 +115,7 @@ No test calls Gemini or HubSpot, so none of them need keys.
 | `SMTP_HOST`, `SMTP_PORT`, `EMAIL_FROM` | no | Default to Gmail (`smtp.gmail.com`, `587`) and the `SMTP_USER` address. |
 | `GOOGLE_CLIENT_ID` | for Google | A Google OAuth web client ID. Turns on Continue with Google. Set the same value as `VITE_GOOGLE_CLIENT_ID` on the frontend. |
 | `UPLOADS_PER_USER_DAY`, `UPLOADS_PER_DAY` | no | Upload limits, which emailed documents count against too. Default 10 per user and 100 in total per day. |
-| `INTAKE_EMAIL`, `INTAKE_PASSWORD` | for email in | The inbox that forwarded documents arrive in, and its password. For Gmail, use an [app password](https://myaccount.google.com/apppasswords). It can be an account you use for other things: only mail sent to its `+` addresses is read or marked read. Without them, email intake is hidden. |
+| `INTAKE_EMAIL`, `INTAKE_PASSWORD` | for email in | The inbox that forwarded documents arrive in, and its password. For Gmail, use an [app password](https://myaccount.google.com/apppasswords). It can be an account you use for other things: only mail sent to its `+inkfold-` addresses is read or marked read. Without them, email intake is hidden. |
 | `INTAKE_IMAP_HOST` | no | Defaults to `imap.gmail.com`. Any IMAP inbox that delivers `name+anything@` addresses works. |
 | `INTAKE_POLL_SECRET` | no | Lets the scheduled job check the inbox. Without it, mail is read when someone presses **Check inbox now**. |
 
@@ -190,7 +190,7 @@ Email and password or Continue with Google, with scrypt hashes and 8-hour sessio
 <td width="50%" valign="top">
 
 ### 📬 Email them in
-Every account gets a private address such as `inkfold.intake+k3x9q2@gmail.com`. Forwarded attachments are read, and an email with no attachment is read from its text, which suits lead emails. One inbox serves everyone, and the part after the `+` says whose mail it is. Each email is read once, even when two checks run together, and a scheduled GitHub Action checks every 10 minutes.
+Every account gets a private address such as `you+inkfold-k3x9q2abcd@gmail.com`. Forwarded attachments are read, and an email with no attachment is read from its text, which suits lead emails. One inbox serves everyone, and the part after `+inkfold-` says whose mail it is. Only those addresses are touched, so the inbox can be an account you also use for other things. Each email is read once, even when two checks run together, and a scheduled GitHub Action checks every 10 minutes.
 
 ### 🔀 Direct or through n8n
 The same HubSpot calls run either in the API or in an n8n workflow you can extend with your own steps. The workflow ships as JSON with its Code nodes kept as tested source files.

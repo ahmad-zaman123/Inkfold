@@ -65,14 +65,17 @@ def documents(client, auth):
 
 
 def test_plus_addresses_find_the_token_and_ignore_everything_else():
-    assert token_for(["someone@example.com", "Inkfold.Intake+abc123xyz9@gmail.com"], INBOX) == "abc123xyz9"
+    ours = "inkfold.intake+inkfold-abc123xyz9@gmail.com"
+    assert address_for(INBOX, "abc123xyz9") == ours
+    assert token_for(["someone@example.com", "Inkfold.Intake+Inkfold-ABC123xyz9@gmail.com"], INBOX) == "abc123xyz9"
     # Gmail ignores dots before the @.
-    assert token_for(["inkfoldintake+abc123xyz9@googlemail.com"], "inkfold.intake@googlemail.com") == "abc123xyz9"
+    assert token_for(["inkfoldintake+inkfold-abc123xyz9@googlemail.com"], "inkfold.intake@googlemail.com") == "abc123xyz9"
     assert token_for(["inkfold.intake@gmail.com"], INBOX) is None
-    assert token_for(["other+abc123xyz9@gmail.com"], INBOX) is None
-    assert token_for(["inkfold.intake+abc123xyz9@example.com"], INBOX) is None
-    assert token_for(["inkfold.intake+a'b@gmail.com"], INBOX) is None
-    assert address_for(INBOX, "abc123xyz9") == "inkfold.intake+abc123xyz9@gmail.com"
+    assert token_for(["other+inkfold-abc123xyz9@gmail.com"], INBOX) is None
+    assert token_for(["inkfold.intake+inkfold-abc123xyz9@example.com"], INBOX) is None
+    # Other projects' plus addresses on the same inbox are not Inkfold's.
+    assert token_for(["inkfold.intake+livecheck@gmail.com", "inkfold.intake+abc123xyz9@gmail.com"], INBOX) is None
+    assert token_for(["inkfold.intake+inkfold-short@gmail.com", "inkfold.intake+inkfold-abc123xyz9x@gmail.com"], INBOX) is None
 
 
 def test_attachments_are_read_and_signature_logos_are_skipped():
@@ -177,7 +180,7 @@ def test_the_same_file_in_a_new_email_is_spotted_as_a_duplicate(intake_client, i
 
 
 def test_mail_to_unknown_intake_addresses_is_ignored_and_marked_read(intake_client, inbox, auth, gemini):
-    uid = inbox.add(email_to(address_for(INBOX, "unknown12345"), attachments=[pdf()]))
+    uid = inbox.add(email_to(address_for(INBOX, "unknown123"), attachments=[pdf()]))
     assert check(intake_client, auth)["handled"] == 1
     assert inbox.messages[uid][1] is True and gemini.calls == 0 and documents(intake_client, auth) == []
     assert check(intake_client, auth)["recent"] == []
@@ -187,6 +190,8 @@ def test_the_inboxs_other_mail_is_left_unread_and_unrecorded(intake_client, inbo
     # The inbox can be a working account: its own mail must stay as it was.
     personal = [inbox.add(email_to(INBOX, subject=f"Personal {n}", body=LEAD)) for n in range(25)]
     personal.append(inbox.add(email_to("someone.else@example.com", subject="Newsletter", body=LEAD)))
+    # Another project's test mail, also on a plus address.
+    personal.append(inbox.add(email_to("inkfold.intake+livecheck@gmail.com", subject="Reset your password", body=LEAD)))
     ours = inbox.add(email_to(my_address(intake_client, auth), attachments=[pdf()]))
     assert check(intake_client, auth)["handled"] == 1
     assert inbox.messages[ours][1] is True
@@ -336,7 +341,7 @@ def test_the_imap_mailbox_peeks_then_marks_read(monkeypatch):
                 return "OK", [b"7 9"]
             if command == "FETCH" and "HEADER.FIELDS" in args[1]:
                 return "OK", [
-                    (b"1 (UID 7 BODY[HEADER.FIELDS (TO)] {40}", b"To: inkfold.intake+abc123xyz9@gmail.com\r\n\r\n"), b")",
+                    (b"1 (UID 7 BODY[HEADER.FIELDS (TO)] {40}", b"To: inkfold.intake+inkfold-abc123xyz9@gmail.com\r\n\r\n"), b")",
                     (b"2 (UID 9 BODY[HEADER.FIELDS (TO)] {30}", b"To: friend@example.com\r\n\r\n"), b")",
                 ]
             if command == "FETCH":
@@ -350,7 +355,7 @@ def test_the_imap_mailbox_peeks_then_marks_read(monkeypatch):
     since = (date.today() - timedelta(days=7)).strftime("%d-%b-%Y")
     with intake.ImapMailbox("imap.test", INBOX, "app-password").session() as session:
         assert session.unread() == [b"7", b"9"]
-        assert session.recipients([b"7", b"9"]) == {b"7": ["inkfold.intake+abc123xyz9@gmail.com"], b"9": ["friend@example.com"]}
+        assert session.recipients([b"7", b"9"]) == {b"7": ["inkfold.intake+inkfold-abc123xyz9@gmail.com"], b"9": ["friend@example.com"]}
         assert session.fetch(b"7") == b"raw-7"
         session.mark_read(b"7")
     assert calls == [

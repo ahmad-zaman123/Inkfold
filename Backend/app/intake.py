@@ -1,6 +1,6 @@
 """Email intake: documents forwarded to a per-account address land in Inkfold.
 
-Every account gets `<inbox>+<token>@<domain>`. Mail providers such as Gmail deliver plus
+Every account gets `<inbox>+inkfold-<token>@<domain>`. Mail providers such as Gmail deliver plus
 addresses to the main inbox, so one mailbox serves everyone and the token says whose it is.
 """
 
@@ -37,9 +37,13 @@ def new_token():
     return "".join(secrets.choice(TOKEN_ALPHABET) for _ in range(TOKEN_LENGTH))
 
 
+# Marks Inkfold's plus addresses, so other uses of `+` on the same inbox are never touched.
+ADDRESS_PREFIX = "inkfold-"
+
+
 def address_for(inbox, token):
     local, _, domain = inbox.partition("@")
-    return f"{local}+{token}@{domain}"
+    return f"{local}+{ADDRESS_PREFIX}{token}@{domain}"
 
 
 def _local_key(local, domain):
@@ -49,14 +53,15 @@ def _local_key(local, domain):
 
 
 def token_for(recipients, inbox):
-    """The token of the first recipient that is a plus address of `inbox`, or None."""
+    """The token of the first recipient that is one of Inkfold's plus addresses on `inbox`, or None."""
     inbox_local, _, inbox_domain = inbox.lower().partition("@")
     wanted = _local_key(inbox_local, inbox_domain)
     for address in recipients:
         local, _, domain = address.lower().partition("@")
         base, plus, token = local.partition("+")
-        if plus and domain == inbox_domain and _local_key(base, domain) == wanted and re.fullmatch(r"[a-z0-9]{6,40}", token):
-            return token
+        match = re.fullmatch(rf"{re.escape(ADDRESS_PREFIX)}([a-z0-9]{{{TOKEN_LENGTH}}})", token)
+        if plus and match and domain == inbox_domain and _local_key(base, domain) == wanted:
+            return match.group(1)
     return None
 
 
