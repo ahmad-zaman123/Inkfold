@@ -1,7 +1,7 @@
 # Sample documents
 
 Three fictional documents for trying Inkfold: an invoice, a business card and a lead form.
-All people, companies, addresses and numbers are made up, and every domain ends in `.example`.
+All people, companies, addresses and numbers are made up, and every email and website is under `example.com`, which is reserved for examples.
 
 The sources are in `src/`. To render them again:
 

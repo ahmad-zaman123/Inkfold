@@ -31,7 +31,7 @@ API = f"http://127.0.0.1:{API_PORT}"
 WEBHOOK = f"http://127.0.0.1:{N8N_PORT}/webhook/inkfold"
 SECRET = secrets.token_hex(24)
 # The fake HubSpot turns this contact away, to check that a failure comes back too.
-REJECTED_EMAIL = "lina@cedarandco.example"
+REJECTED_EMAIL = "lina@cedarandco.example.com"
 
 calls = []
 

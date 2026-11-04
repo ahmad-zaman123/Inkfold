@@ -50,11 +50,11 @@ export default function Landing({ onDemo }) {
             <span className="example-tag">business-card.png</span>
             <strong>Omar Siddiqui</strong>
             <span>Head of Operations</span>
-            <span className="mono">omar.siddiqui@kestrel-logistics.example</span>
+            <span className="mono">omar.siddiqui@kestrel-logistics.example.com</span>
             <span className="mono">+44 20 7946 0731</span>
           </div>
           <div className="example-fields">
-            <div className="example-row"><span>Email</span><b className="mono">omar.siddiqui@kestrel-logistics.example</b><i>96%</i></div>
+            <div className="example-row"><span>Email</span><b className="mono">omar.siddiqui@kestrel-logistics.example.com</b><i>96%</i></div>
             <div className="example-row"><span>Phone</span><b className="mono">+442079460731</b><i>95%</i></div>
             <div className="example-row warn"><span>Address</span><b>18 Wharf Road, London</b><i>Check this</i></div>
           </div>
