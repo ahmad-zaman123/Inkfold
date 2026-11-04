@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
   <img src="https://img.shields.io/badge/HubSpot-CRM%20API-FF7A59?logo=hubspot&logoColor=white&style=flat-square" alt="HubSpot" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-145%20passing-2ea44f?style=flat-square" alt="145 tests passing" />
+  <img src="https://img.shields.io/badge/tests-151%20passing-2ea44f?style=flat-square" alt="151 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -74,8 +74,8 @@ To send records through n8n instead of straight to HubSpot, see [`n8n/README.md`
 **4. Tests**
 
 ```bash
-cd Backend && .venv/bin/python -m pytest      # 136 tests, real Postgres, fake Gemini and HubSpot
-node --test n8n/test/*.test.mjs                # 9 tests for the n8n Code nodes
+cd Backend && .venv/bin/python -m pytest      # 141 tests, real Postgres, fake Gemini and HubSpot
+node --test n8n/test/*.test.mjs                # 10 tests for the n8n Code nodes
 Backend/.venv/bin/python n8n/test/e2e.py       # API + n8n + fake HubSpot round trip
 ```
 
@@ -93,7 +93,7 @@ No test calls Gemini or HubSpot, so none of them need keys.
 | `GEMINI_EXTRACT_MODELS` | no | Comma-separated, tried in order when one is busy, out of quota or retired. |
 | `HUBSPOT_TOKEN` | to send | Private app token. Without it (and without n8n), "Send to HubSpot" explains that HubSpot isn't connected. |
 | `HUBSPOT_PORTAL_ID` | no | Your HubSpot account ID, so the app can link to the records it made. |
-| `HUBSPOT_DEAL_STAGE` | no | Stage for new deals. Defaults to `closedwon`, since an invoice is a sale that happened. |
+| `HUBSPOT_DEAL_STAGE` | no | Stage for new deals, by name or ID. Defaults to `closedwon`, since an invoice is a sale that happened. Newer HubSpot accounts use numeric stage IDs, so a name is looked up in the default pipeline. |
 | `N8N_WEBHOOK_URL` | no | When set, records go through the n8n workflow instead of straight to HubSpot. |
 | `N8N_SHARED_SECRET` | with n8n | Signs requests both ways. Use a long random string. |
 | `PUBLIC_API_URL` | with n8n | The address n8n can reach this API at, for its callback. |

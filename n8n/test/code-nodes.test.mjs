@@ -80,7 +80,7 @@ function fakeHubSpot(overrides = {}) {
     if (override) return typeof override === 'function' ? override() : override
     if (path.endsWith('/batch/upsert')) return { statusCode: 200, headers: {}, body: { results: [{ id: '501' }] } }
     if (path.endsWith('/companies/search')) return { statusCode: 200, headers: {}, body: { results: [] } }
-    if (method === 'PUT') return { statusCode: 200, headers: {}, body: {} }
+    if (method === 'PUT' || method === 'GET') return { statusCode: 200, headers: {}, body: {} }
     return { statusCode: 201, headers: {}, body: { id: String(next++) } }
   }
   return { calls, helpers: { httpRequest } }
@@ -118,6 +118,17 @@ test('syncing creates the contact, company, deal and note and links them', async
     '/crm/v4/objects/deals/101/associations/default/companies/100',
     '/crm/v4/objects/notes/102/associations/default/contacts/501',
   ])
+})
+
+test('a stage name becomes the account\'s numeric stage ID', async () => {
+  const stages = [
+    { id: '4561146603', label: 'Appointment scheduled', metadata: { isClosed: 'false', probability: '0.2' } },
+    { id: '4561146608', label: 'Closed won', metadata: { isClosed: 'true', probability: '1.0' } },
+  ]
+  const { calls, helpers } = fakeHubSpot({ 'GET /crm/v3/pipelines/deals/default': { statusCode: 200, headers: {}, body: { stages } } })
+  await runNode('sync-to-hubspot.js', { input: { json: { payload } }, env, helpers })
+  const deal = calls.find((c) => c.method === 'POST' && c.path === '/crm/v3/objects/deals')
+  assert.equal(deal.body.properties.dealstage, '4561146608')
 })
 
 test('an existing company found by domain is updated, and a deleted deal is made again', async () => {

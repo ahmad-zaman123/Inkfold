@@ -17,9 +17,10 @@ RECORD = {
 class FakeHubSpot:
     """Answers like HubSpot's REST API and records every call."""
 
-    def __init__(self, companies=(), fail=None):
+    def __init__(self, companies=(), fail=None, stages=None):
         self.calls = []
         self.companies = list(companies)
+        self.stages = stages
         self.fail = fail or {}
         self.next_id = 100
 
@@ -32,6 +33,8 @@ class FakeHubSpot:
             if not self.fail[key]:
                 del self.fail[key]
             return httpx.Response(status, json={"status": "error", "message": "Property values were not valid"}, headers={"Retry-After": "0"})
+        if request.url.path == "/crm/v3/pipelines/deals/default" and self.stages is not None:
+            return httpx.Response(200, json={"id": "default", "stages": self.stages})
         if request.url.path == "/crm/v3/objects/contacts/batch/upsert":
             return httpx.Response(200, json={"status": "COMPLETE", "results": [{"id": "501", "properties": body["inputs"][0]["properties"]}]})
         if request.url.path == "/crm/v3/objects/companies/search":
@@ -71,6 +74,7 @@ def test_first_sync_creates_everything_and_links_it():
         ("POST", "/crm/v3/objects/contacts/batch/upsert"),
         ("POST", "/crm/v3/objects/companies/search"),
         ("POST", "/crm/v3/objects/companies"),
+        ("GET", "/crm/v3/pipelines/deals/default"),
         ("POST", "/crm/v3/objects/deals"),
         ("POST", "/crm/v3/objects/notes"),
         ("PUT", "/crm/v4/objects/contacts/501/associations/default/companies/101"),
@@ -84,7 +88,7 @@ def test_first_sync_creates_everything_and_links_it():
 def test_request_bodies_match_hubspot():
     fake = FakeHubSpot()
     hubspot(fake, deal_stage="appointmentscheduled").push(RECORD)
-    upsert, search, _, deal, note = (c["body"] for c in fake.calls[:5])
+    upsert, search, _, _, deal, note = (c["body"] for c in fake.calls[:6])
     assert upsert == {"inputs": [{"idProperty": "email", "id": "sara@brightpath.example", "properties": RECORD["contact"]}]}
     assert search["filterGroups"][0]["filters"] == [{"propertyName": "domain", "operator": "EQ", "value": "brightpath.example"}]
     assert deal["properties"] == {
@@ -182,3 +186,49 @@ def test_base_url_can_point_at_a_mock():
     client = HubSpot("t", client=httpx.Client(transport=httpx.MockTransport(fake)), base_url="http://mock.local/")
     client.push({"contact": {"email": "a@b.co"}, "company": None, "deal": None, "note": None})
     assert fake.calls[0]["path"] == "/crm/v3/objects/contacts/batch/upsert"
+
+
+NEW_ACCOUNT_STAGES = [
+    {"id": "4561146603", "label": "Appointment scheduled", "metadata": {"isClosed": "false", "probability": "0.2"}},
+    {"id": "4561146608", "label": "Closed won", "metadata": {"isClosed": "true", "probability": "1.0"}},
+    {"id": "4561146609", "label": "Closed lost", "metadata": {"isClosed": "true", "probability": "0.0"}},
+]
+
+
+def deal_stage_sent(fake):
+    return next(c["body"]["properties"]["dealstage"] for c in fake.calls if c["path"] == "/crm/v3/objects/deals")
+
+
+def test_a_stage_name_is_turned_into_the_accounts_numeric_stage_id():
+    # New HubSpot accounts reject "closedwon" and only accept their own stage IDs.
+    fake = FakeHubSpot(stages=NEW_ACCOUNT_STAGES)
+    hubspot(fake, deal_stage="closedwon").push(RECORD)
+    assert deal_stage_sent(fake) == "4561146608"
+
+
+def test_a_renamed_won_stage_is_still_found():
+    stages = [dict(stage) for stage in NEW_ACCOUNT_STAGES]
+    stages[1]["label"] = "Paid"
+    fake = FakeHubSpot(stages=stages)
+    hubspot(fake, deal_stage="closedwon").push(RECORD)
+    assert deal_stage_sent(fake) == "4561146608"
+
+
+def test_a_stage_id_is_used_as_it_is():
+    fake = FakeHubSpot(stages=NEW_ACCOUNT_STAGES)
+    hubspot(fake, deal_stage="4561146603").push(RECORD)
+    assert deal_stage_sent(fake) == "4561146603"
+
+
+def test_an_unreadable_pipeline_falls_back_to_the_configured_stage():
+    fake = FakeHubSpot(fail={("GET", "/crm/v3/pipelines/deals/default"): [403]})
+    hubspot(fake, deal_stage="closedwon").push(RECORD)
+    assert deal_stage_sent(fake) == "closedwon"
+
+
+def test_the_pipeline_is_read_once_per_client():
+    fake = FakeHubSpot(stages=NEW_ACCOUNT_STAGES)
+    client = hubspot(fake)
+    client.push(RECORD)
+    client.push(RECORD, existing={"deal_id": "102"})
+    assert fake.paths().count(("GET", "/crm/v3/pipelines/deals/default")) == 1

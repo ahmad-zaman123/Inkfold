@@ -31,6 +31,7 @@ class HubSpot:
         self.token = token
         self.portal_id = portal_id
         self.deal_stage = deal_stage
+        self._stage_id = None
         self.client = client or httpx.Client(timeout=TIMEOUT_SECONDS)
         self.base = (base_url or self.BASE).rstrip("/")
 
@@ -89,11 +90,22 @@ class HubSpot:
             return company_id
         return self._create_or_update("companies", None, company)
 
+    def _resolve_stage(self):
+        """The stage ID to use. Newer HubSpot accounts use numeric stage IDs, so `closedwon` is looked up by label."""
+        if self._stage_id is None:
+            self._stage_id = self.deal_stage
+            try:
+                stages = self._request("GET", "/crm/v3/pipelines/deals/default").get("stages") or []
+            except (CrmError, _NotFound):
+                stages = []  # Can't read the pipeline: send the configured value as it is.
+            self._stage_id = _match_stage(self.deal_stage, stages) or self.deal_stage
+        return self._stage_id
+
     def _deal(self, deal, existing_id):
         properties = {
             "dealname": deal["dealname"],
             "amount": deal["amount"],
-            "dealstage": self.deal_stage,
+            "dealstage": self._resolve_stage(),
             "pipeline": "default",
         }
         if deal.get("currency"):
@@ -138,6 +150,27 @@ class HubSpot:
             "contact_url": self._url("contacts", contact_id),
             "deal_url": self._url("deals", deal_id),
         }
+
+
+def _simplify(text):
+    return "".join(ch for ch in str(text).lower() if ch.isalnum())
+
+
+def _match_stage(wanted, stages):
+    """Finds `wanted` among a pipeline's stages by ID, then by label ("closedwon" matches "Closed won")."""
+    for stage in stages:
+        if stage.get("id") == wanted:
+            return wanted
+    for stage in stages:
+        if _simplify(stage.get("label", "")) == _simplify(wanted):
+            return stage.get("id")
+    if _simplify(wanted) == "closedwon":
+        # The label may have been renamed; HubSpot still marks the won stage as closed at 100%.
+        for stage in stages:
+            meta = stage.get("metadata") or {}
+            if str(meta.get("isClosed")).lower() == "true" and str(meta.get("probability")) in ("1", "1.0"):
+                return stage.get("id")
+    return None
 
 
 def _retry_after(response):

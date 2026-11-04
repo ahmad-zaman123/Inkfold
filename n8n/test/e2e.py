@@ -67,6 +67,9 @@ class FakeHubSpot(BaseHTTPRequestHandler):
             return self._reply({"total": 0, "results": []})
         self._reply({"id": self._new_id()})
 
+    def do_GET(self):
+        self._reply({})
+
     def do_PATCH(self):
         self._record()
         self._reply({"id": self.path.rsplit("/", 1)[1]})

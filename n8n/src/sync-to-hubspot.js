@@ -82,8 +82,30 @@ async function saveCompany(company, existingId) {
   return createOrUpdate('companies', null, company);
 }
 
-function dealProperties(deal) {
-  const properties = { dealname: deal.dealname, amount: deal.amount, dealstage: DEAL_STAGE, pipeline: 'default' };
+const simplify = (text) => String(text).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+// Newer HubSpot accounts use numeric stage IDs, so a name like "closedwon" is looked up in the pipeline.
+async function resolveStage() {
+  let stages = [];
+  try {
+    stages = (await request('GET', '/crm/v3/pipelines/deals/default')).stages || [];
+  } catch (error) {
+    return DEAL_STAGE; // Can't read the pipeline: send the configured value as it is.
+  }
+  const byId = stages.find((stage) => stage.id === DEAL_STAGE);
+  if (byId) return byId.id;
+  const byLabel = stages.find((stage) => simplify(stage.label || '') === simplify(DEAL_STAGE));
+  if (byLabel) return byLabel.id;
+  if (simplify(DEAL_STAGE) === 'closedwon') {
+    // The label may have been renamed; HubSpot still marks the won stage as closed at 100%.
+    const won = stages.find((stage) => String(stage.metadata?.isClosed).toLowerCase() === 'true' && ['1', '1.0'].includes(String(stage.metadata?.probability)));
+    if (won) return won.id;
+  }
+  return DEAL_STAGE;
+}
+
+function dealProperties(deal, stage) {
+  const properties = { dealname: deal.dealname, amount: deal.amount, dealstage: stage, pipeline: 'default' };
   if (deal.currency) properties.deal_currency_code = deal.currency;
   if (deal.closedate) properties.closedate = `${deal.closedate}T00:00:00Z`;
   return properties;
@@ -100,7 +122,7 @@ try {
   });
   const contactId = upserted.results[0].id;
   const companyId = record.company ? await saveCompany(record.company, existing.company_id) : null;
-  const dealId = record.deal ? await createOrUpdate('deals', existing.deal_id, dealProperties(record.deal)) : null;
+  const dealId = record.deal ? await createOrUpdate('deals', existing.deal_id, dealProperties(record.deal, await resolveStage())) : null;
   const noteId = record.note
     ? await createOrUpdate('notes', existing.note_id, {
         hs_note_body: record.note,
