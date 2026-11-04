@@ -1,0 +1,530 @@
+[
+ {
+  "id": "invoice-01",
+  "file": "invoice-01.pdf",
+  "doc_type": "invoice",
+  "fields": {
+   "contact.first_name": "Daniel",
+   "contact.last_name": "Okafor",
+   "contact.email": "daniel.okafor@lumendental.example.com",
+   "contact.phone": "+15125550192",
+   "contact.job_title": "Procurement Lead",
+   "company.name": "Lumen Dental Group",
+   "company.domain": null,
+   "company.address": "77 Pine Avenue, Austin, TX 78702",
+   "invoice.number": "INV-2207",
+   "invoice.issue_date": "2026-10-14",
+   "invoice.due_date": "2026-11-13",
+   "invoice.currency": "USD",
+   "invoice.total": "1674.63"
+  },
+  "line_items": 4
+ },
+ {
+  "id": "invoice-02",
+  "file": "invoice-02.pdf",
+  "doc_type": "invoice",
+  "fields": {
+   "contact.first_name": "Harriet",
+   "contact.last_name": "Cole",
+   "contact.email": "harriet@fennickmoss.example.com",
+   "contact.phone": "+441134960587",
+   "contact.job_title": "Studio Director",
+   "company.name": "Fennick & Moss Ltd",
+   "company.domain": null,
+   "company.address": "12 Calder Street, Leeds LS1 4AB",
+   "invoice.number": "0458",
+   "invoice.issue_date": "2026-09-03",
+   "invoice.due_date": "2026-10-03",
+   "invoice.currency": "GBP",
+   "invoice.total": "1920.00"
+  },
+  "line_items": 3
+ },
+ {
+  "id": "invoice-03",
+  "file": "invoice-03.pdf",
+  "doc_type": "invoice",
+  "fields": {
+   "contact.first_name": "Jonas",
+   "contact.last_name": "Weber",
+   "contact.email": "j.weber@weber-haustechnik.example.com",
+   "contact.phone": "+4930901820",
+   "contact.job_title": "Head of Purchasing",
+   "company.name": "Weber Haustechnik GmbH",
+   "company.domain": null,
+   "company.address": "Lindenallee 8, 50968 Köln",
+   "invoice.number": "RE-2026-0193",
+   "invoice.issue_date": "2026-08-15",
+   "invoice.due_date": "2026-09-14",
+   "invoice.currency": "EUR",
+   "invoice.total": "2444.26"
+  },
+  "line_items": 3
+ },
+ {
+  "id": "invoice-04",
+  "file": "invoice-04.pdf",
+  "doc_type": "invoice",
+  "fields": {
+   "contact.first_name": "Ayesha",
+   "contact.last_name": "Raza",
+   "contact.email": "ayesha.raza@industextiles.example.com",
+   "contact.phone": "+924235760145",
+   "contact.job_title": "Admin Manager",
+   "company.name": "Indus Textiles",
+   "company.domain": null,
+   "company.address": "23-B Gulberg III, Lahore 54660",
+   "invoice.number": "INV-PK-311",
+   "invoice.issue_date": "2026-10-02",
+   "invoice.due_date": "2026-11-01",
+   "invoice.currency": "PKR",
+   "invoice.total": "144955.00"
+  },
+  "line_items": 3
+ },
+ {
+  "id": "invoice-05",
+  "file": "invoice-05.pdf",
+  "doc_type": "invoice",
+  "fields": {
+   "contact.first_name": null,
+   "contact.last_name": null,
+   "contact.email": "ap@grayline.example.com",
+   "contact.phone": "+12065550134",
+   "contact.job_title": null,
+   "company.name": "Grayline Freight Inc.",
+   "company.domain": null,
+   "company.address": "5100 Terminal Way, Seattle, WA 98134",
+   "invoice.number": "BG-88014",
+   "invoice.issue_date": "2026-09-30",
+   "invoice.due_date": "2026-10-30",
+   "invoice.currency": "USD",
+   "invoice.total": "9270.00"
+  },
+  "line_items": 2
+ },
+ {
+  "id": "invoice-06",
+  "file": "invoice-06.pdf",
+  "doc_type": "invoice",
+  "fields": {
+   "contact.first_name": "Priya",
+   "contact.last_name": "Nair",
+   "contact.email": "priya@coralbay.example.com",
+   "contact.phone": "+61293744000",
+   "contact.job_title": "Owner",
+   "company.name": "Coral Bay Yoga",
+   "company.domain": null,
+   "company.address": "40 Ocean Street, Bondi NSW 2026",
+   "invoice.number": "1187",
+   "invoice.issue_date": "2026-07-21",
+   "invoice.due_date": "2026-08-04",
+   "invoice.currency": "AUD",
+   "invoice.total": "869.00"
+  },
+  "line_items": 3
+ },
+ {
+  "id": "invoice-07",
+  "file": "invoice-07.pdf",
+  "doc_type": "invoice",
+  "fields": {
+   "contact.first_name": "Marcus",
+   "contact.last_name": "Lee",
+   "contact.email": "marcus.lee@brightwave.example.com",
+   "contact.phone": "+17185550163",
+   "contact.job_title": "Facilities Coordinator",
+   "company.name": "Brightwave Health",
+   "company.domain": null,
+   "company.address": "1 Court Square, Long Island City, NY 11101",
+   "invoice.number": "HOI-5520",
+   "invoice.issue_date": "2026-08-03",
+   "invoice.due_date": "2026-09-02",
+   "invoice.currency": "USD",
+   "invoice.total": "4196.00"
+  },
+  "line_items": 3
+ },
+ {
+  "id": "invoice-08",
+  "file": "invoice-08.png",
+  "doc_type": "invoice",
+  "fields": {
+   "contact.first_name": "Sofia",
+   "contact.last_name": "Marino",
+   "contact.email": "sofia@tidewaterlegal.example.com",
+   "contact.phone": "+19175550181",
+   "contact.job_title": "Office Manager",
+   "company.name": "Tidewater Legal",
+   "company.domain": null,
+   "company.address": "45 Main Street, Suite 600, Brooklyn, NY 11201",
+   "invoice.number": "GL-1093",
+   "invoice.issue_date": "2026-11-02",
+   "invoice.due_date": "2026-11-16",
+   "invoice.currency": "USD",
+   "invoice.total": "1350.00"
+  },
+  "line_items": 2
+ },
+ {
+  "id": "card-01",
+  "file": "card-01.png",
+  "doc_type": "business_card",
+  "fields": {
+   "contact.first_name": "Mei",
+   "contact.last_name": "Tan",
+   "contact.email": "mei.tan@harborpine.example.com",
+   "contact.phone": "+6561234567",
+   "contact.job_title": "Product Designer",
+   "company.name": "Harbor & Pine",
+   "company.domain": "harborpine.example.com",
+   "company.address": "8 Marina View, #12-01, Singapore 018960",
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "card-02",
+  "file": "card-02.png",
+  "doc_type": "business_card",
+  "fields": {
+   "contact.first_name": "Carlos",
+   "contact.last_name": "Mendes",
+   "contact.email": "carlos@atlassolar.example.com",
+   "contact.phone": "+351912345678",
+   "contact.job_title": "Sales Director",
+   "company.name": "Atlas Solar",
+   "company.domain": "atlassolar.example.com",
+   "company.address": "Av. da Liberdade 190, 1250-147 Lisboa",
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "card-03",
+  "file": "card-03.png",
+  "doc_type": "business_card",
+  "fields": {
+   "contact.first_name": "Fatima",
+   "contact.last_name": "Zahra",
+   "contact.email": "fatima.zahra@brightline.example.com",
+   "contact.phone": "(020) 7946 0958",
+   "contact.job_title": "Account Executive",
+   "company.name": "Brightline Media",
+   "company.domain": "brightline.example.com",
+   "company.address": "22 Old Street, London EC1V 9AB",
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "card-04",
+  "file": "card-04.png",
+  "doc_type": "business_card",
+  "fields": {
+   "contact.first_name": "James",
+   "contact.last_name": "O'Connor",
+   "contact.email": "james.oconnor@riverbendcu.example.com",
+   "contact.phone": "+13125550147",
+   "contact.job_title": "Head of IT",
+   "company.name": "Riverbend Credit Union",
+   "company.domain": "riverbendcu.example.com",
+   "company.address": "200 N LaSalle St, Chicago, IL 60601",
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "card-05",
+  "file": "card-05.png",
+  "doc_type": "business_card",
+  "fields": {
+   "contact.first_name": "Hana",
+   "contact.last_name": "Kobayashi",
+   "contact.email": "hana@kumotea.example.com",
+   "contact.phone": "+81312345678",
+   "contact.job_title": "Marketing Manager",
+   "company.name": "Kumo Tea Co.",
+   "company.domain": "kumotea.example.com",
+   "company.address": "2-4-1 Marunouchi, Chiyoda-ku, Tokyo",
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "card-06",
+  "file": "card-06.png",
+  "doc_type": "business_card",
+  "fields": {
+   "contact.first_name": "Liam",
+   "contact.last_name": "Novak",
+   "contact.email": "liam@novakhale.example.com",
+   "contact.phone": [
+    "+420601234567",
+    "+420222123456"
+   ],
+   "contact.job_title": "Partner",
+   "company.name": "Novak & Hale Architects",
+   "company.domain": [
+    null,
+    "novakhale.example.com"
+   ],
+   "company.address": "Národní 37, 110 00 Praha 1",
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "lead-01",
+  "file": "lead-01.pdf",
+  "doc_type": "lead_form",
+  "fields": {
+   "contact.first_name": "Grace",
+   "contact.last_name": "Huang",
+   "contact.email": "grace.huang@northfield.example.com",
+   "contact.phone": "+16465550110",
+   "contact.job_title": "Operations Manager",
+   "company.name": "Northfield Clinics",
+   "company.domain": "northfield.example.com",
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "lead-02",
+  "file": "lead-02.pdf",
+  "doc_type": "lead_form",
+  "fields": {
+   "contact.first_name": "Tomás",
+   "contact.last_name": "Rivera",
+   "contact.email": "tomas.rivera@verdeviva.example.com",
+   "contact.phone": "+34612345678",
+   "contact.job_title": "Owner",
+   "company.name": "Verde Viva",
+   "company.domain": [
+    null,
+    "verdeviva.example.com"
+   ],
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "lead-03",
+  "file": "lead-03.pdf",
+  "doc_type": "lead_form",
+  "fields": {
+   "contact.first_name": "Noah",
+   "contact.last_name": "Fischer",
+   "contact.email": "noah.fischer@alpenbank.example.com",
+   "contact.phone": "+41446681800",
+   "contact.job_title": "Head of Finance Operations",
+   "company.name": "Alpen Privatbank",
+   "company.domain": [
+    null,
+    "alpenbank.example.com"
+   ],
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "lead-04",
+  "file": "lead-04.pdf",
+  "doc_type": "lead_form",
+  "fields": {
+   "contact.first_name": "Bilal",
+   "contact.last_name": "Ahmed",
+   "contact.email": "bilal@crescentfoods.example.com",
+   "contact.phone": "0300 1234567",
+   "contact.job_title": "Purchasing Officer",
+   "company.name": "Crescent Foods",
+   "company.domain": [
+    null,
+    "crescentfoods.example.com"
+   ],
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "lead-05",
+  "file": "lead-05.pdf",
+  "doc_type": "lead_form",
+  "fields": {
+   "contact.first_name": "Elena",
+   "contact.last_name": "Petrova",
+   "contact.email": "e.petrova@volga-analytics.example.com",
+   "contact.phone": "+74951234567",
+   "contact.job_title": "Chief Financial Officer",
+   "company.name": "Volga Analytics",
+   "company.domain": "volga-analytics.example.com",
+   "company.address": "Tverskaya St 7, Moscow 125009",
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "lead-06",
+  "file": "lead-06.pdf",
+  "doc_type": "lead_form",
+  "fields": {
+   "contact.first_name": "Samuel",
+   "contact.last_name": "Okoye",
+   "contact.email": "sam.okoye@lagosfreight.example.com",
+   "contact.phone": "+2348021234567",
+   "contact.job_title": [
+    null,
+    "Head of Logistics",
+    "Logistics"
+   ],
+   "company.name": "Lagos Freight Partners",
+   "company.domain": [
+    null,
+    "lagosfreight.example.com"
+   ],
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "email-01",
+  "file": "email-01.txt",
+  "doc_type": [
+   "lead_form",
+   "other"
+  ],
+  "fields": {
+   "contact.first_name": "Nadia",
+   "contact.last_name": "Karim",
+   "contact.email": "nadia.karim@sablecapital.example.com",
+   "contact.phone": "+441614960321",
+   "contact.job_title": "Workplace Experience Manager",
+   "company.name": "Sable Capital",
+   "company.domain": "sablecapital.example.com",
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "email-02",
+  "file": "email-02.txt",
+  "doc_type": [
+   "lead_form",
+   "other"
+  ],
+  "fields": {
+   "contact.first_name": "Victor",
+   "contact.last_name": "Hale",
+   "contact.email": "victor.hale@halerobotics.example.com",
+   "contact.phone": "+14155550172",
+   "contact.job_title": "VP Business Development",
+   "company.name": "Hale Robotics",
+   "company.domain": [
+    null,
+    "halerobotics.example.com"
+   ],
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "email-03",
+  "file": "email-03.txt",
+  "doc_type": [
+   "lead_form",
+   "other"
+  ],
+  "fields": {
+   "contact.first_name": "Ben",
+   "contact.last_name": "Carter",
+   "contact.email": "ben@pixelforge.example.com",
+   "contact.phone": "+13125550147",
+   "contact.job_title": "CTO",
+   "company.name": "Pixelforge Games",
+   "company.domain": "pixelforge.example.com",
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ },
+ {
+  "id": "email-04",
+  "file": "email-04.txt",
+  "doc_type": [
+   "lead_form",
+   "other"
+  ],
+  "fields": {
+   "contact.first_name": "Zara",
+   "contact.last_name": "Ali",
+   "contact.email": "zara@luminaevents.example.com",
+   "contact.phone": null,
+   "contact.job_title": null,
+   "company.name": "Lumina Events",
+   "company.domain": [
+    null,
+    "luminaevents.example.com"
+   ],
+   "company.address": null,
+   "invoice.number": null,
+   "invoice.issue_date": null,
+   "invoice.due_date": null,
+   "invoice.currency": null,
+   "invoice.total": null
+  }
+ }
+]
