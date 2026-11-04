@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Business card</title>
+<style>
+body { margin: 0; background: #e9ece8; }
+.stage { width: 1000px; height: 620px; display: grid; place-items: center; }
+.card { width: 840px; height: 480px; background: #fdfcf8; border-radius: 14px; box-shadow: 0 18px 40px rgba(20,30,25,.18), 0 2px 6px rgba(20,30,25,.12);
+  padding: 58px 64px; box-sizing: border-box; position: relative; font-family: "Helvetica Neue", Arial, sans-serif; color: #1b2230; overflow: hidden; }
+.card::after { content: ""; position: absolute; right: -90px; top: -90px; width: 300px; height: 300px; border-radius: 50%; border: 34px solid #c9772a; opacity: .9; }
+.logo { font-weight: 800; letter-spacing: .22em; font-size: 19px; color: #c9772a; }
+.logo span { color: #1b2230; }
+h1 { margin: 74px 0 6px; font-size: 44px; font-weight: 600; letter-spacing: -.01em; }
+.role { font-size: 21px; color: #5b6475; }
+.contact { position: absolute; left: 64px; bottom: 54px; font-size: 19px; line-height: 1.6; }
+.contact b { display: inline-block; width: 26px; color: #c9772a; font-weight: 700; }
+.addr { position: absolute; right: 64px; bottom: 54px; text-align: right; font-size: 16px; color: #5b6475; line-height: 1.55; }
+</style></head><body><div class="stage"><div class="card" id="card">
+<div class="logo">KESTREL <span>LOGISTICS</span></div>
+<h1>Omar Siddiqui</h1>
+<div class="role">Head of Operations</div>
+<div class="contact"><div><b>e</b>omar.siddiqui@kestrel-logistics.example</div><div><b>t</b>+44 20 7946 0731</div><div><b>w</b>kestrel-logistics.example</div></div>
+<div class="addr">18 Wharf Road<br>London N1 7GR<br>United Kingdom</div>
+</div></div></body></html>

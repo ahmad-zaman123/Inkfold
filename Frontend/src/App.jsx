@@ -1,0 +1,56 @@
+import { useCallback, useEffect, useState } from 'react'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { api, getToken, setToken, whenSessionExpires } from './api.js'
+import Header from './components/Header.jsx'
+import Auth from './pages/Auth.jsx'
+import Documents from './pages/Documents.jsx'
+import Landing from './pages/Landing.jsx'
+import Review from './pages/Review.jsx'
+
+export default function App() {
+  const navigate = useNavigate()
+  const [user, setUser] = useState(null)
+  const [checking, setChecking] = useState(Boolean(getToken()))
+
+  const signOut = useCallback(() => {
+    setToken(null)
+    setUser(null)
+    navigate('/')
+  }, [navigate])
+
+  useEffect(() => {
+    whenSessionExpires(signOut)
+    if (!getToken()) return
+    api
+      .me()
+      .then(setUser)
+      .catch(() => setToken(null))
+      .finally(() => setChecking(false))
+  }, [signOut])
+
+  function signedIn(session) {
+    setToken(session.token)
+    setUser(session.user)
+    navigate('/')
+  }
+
+  if (checking) return <div className="boot" aria-busy="true" />
+
+  const signedInOnly = (page) => (user ? page : <Navigate to="/login" replace />)
+
+  return (
+    <>
+      <a className="skip" href="#main">Skip to content</a>
+      <Header user={user} onSignOut={signOut} />
+      <main id="main">
+        <Routes>
+          <Route path="/" element={user ? <Documents user={user} /> : <Landing onDemo={signedIn} />} />
+          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Auth mode="login" onSignedIn={signedIn} />} />
+          <Route path="/register" element={user ? <Navigate to="/" replace /> : <Auth mode="register" onSignedIn={signedIn} />} />
+          <Route path="/documents/:id" element={signedInOnly(<Review />)} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </>
+  )
+}

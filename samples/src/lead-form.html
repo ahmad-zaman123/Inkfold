@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Showroom enquiry</title>
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: #222; }
+.page { width: 210mm; height: 297mm; padding: 22mm 22mm; position: relative; background: #fff; }
+.top { font-family: "Helvetica Neue", Arial, sans-serif; display: flex; justify-content: space-between; align-items: baseline; color: #5b6475; font-size: 9pt; border-bottom: 1px solid #d8dce3; padding-bottom: 10px; }
+.top strong { color: #1f4e3d; font-size: 11pt; }
+h1 { font-weight: 400; font-size: 24pt; margin: 26px 0 4px; letter-spacing: -0.01em; }
+.sub { font-family: "Helvetica Neue", Arial, sans-serif; color: #5b6475; font-size: 10pt; margin: 0 0 28px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 26px; font-family: "Helvetica Neue", Arial, sans-serif; }
+.field { margin-bottom: 4px; }
+.field label { display: block; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7384; margin-bottom: 5px; }
+.field div { border: 1px solid #c9cfd8; border-radius: 4px; padding: 9px 11px; font-size: 11pt; min-height: 38px; background: #fbfbfc; }
+.wide { grid-column: 1 / -1; }
+.wide div { min-height: 110px; line-height: 1.55; }
+.boxes { display: flex; gap: 22px; font-size: 10.5pt; padding-top: 4px; }
+.boxes span::before { content: "☐ "; } .boxes span.on::before { content: "☒ "; }
+.meta { margin-top: 30px; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.5pt; color: #8a92a1; border-top: 1px solid #e6e9ee; padding-top: 10px; }
+</style></head><body><div class="page">
+<div class="top"><strong>Northwind Desks</strong><span>Website form · submitted 29 Oct 2026, 16:42</span></div>
+<h1>Showroom enquiry</h1>
+<p class="sub">Tell us about your space and we'll get back to you within one working day.</p>
+<div class="row">
+  <div class="field"><label>Full name</label><div>Lina Haddad</div></div>
+  <div class="field"><label>Job title</label><div>Founder</div></div>
+  <div class="field"><label>Work email</label><div>lina@cedarandco.example</div></div>
+  <div class="field"><label>Phone</label><div>(617) 555-0123</div></div>
+  <div class="field"><label>Company</label><div>Cedar &amp; Co</div></div>
+  <div class="field"><label>Website</label><div>www.cedarandco.example</div></div>
+  <div class="field wide"><label>Interested in</label><div class="boxes" style="min-height:38px"><span class="on">Desks</span><span class="on">Meeting tables</span><span>Chairs</span><span>Storage</span></div></div>
+  <div class="field wide"><label>Message</label><div>We're opening a second store in Boston in March and need 12 standing desks and one large meeting table. Our budget is around $15,000. Could someone call me next week?</div></div>
+</div>
+<p class="meta">A fictional sample document for the Inkfold demo.</p>
+</div></body></html>

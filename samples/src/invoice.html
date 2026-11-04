@@ -1,0 +1,54 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Invoice INV-1042</title>
+<style>
+@page { size: Letter; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; color: #1d2433; font-size: 10.5pt; }
+.page { width: 8.5in; height: 11in; padding: 0.75in 0.8in; position: relative; }
+header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #1f4e3d; padding-bottom: 18px; }
+.brand { font-size: 20pt; font-weight: 700; letter-spacing: -0.02em; color: #1f4e3d; }
+.brand small { display: block; font-size: 9pt; font-weight: 400; color: #5b6475; letter-spacing: 0; margin-top: 4px; line-height: 1.45; }
+.title { text-align: right; }
+.title h1 { margin: 0; font-size: 26pt; font-weight: 300; letter-spacing: 0.08em; color: #1d2433; }
+.title dl { margin: 10px 0 0; display: grid; grid-template-columns: auto auto; gap: 3px 14px; font-size: 9.5pt; }
+.title dt { color: #5b6475; } .title dd { margin: 0; font-weight: 600; }
+.parties { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 28px 0 26px; }
+.parties h2 { font-size: 8pt; letter-spacing: 0.12em; text-transform: uppercase; color: #1f4e3d; margin: 0 0 6px; }
+.parties p { margin: 0; line-height: 1.55; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: #5b6475; border-bottom: 1px solid #c9cfd8; padding: 8px 6px; }
+td { padding: 11px 6px; border-bottom: 1px solid #e6e9ee; vertical-align: top; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+td small { color: #5b6475; }
+.totals { margin-left: auto; width: 46%; margin-top: 16px; }
+.totals div { display: flex; justify-content: space-between; padding: 6px 6px; }
+.totals .grand { border-top: 2px solid #1d2433; margin-top: 6px; padding-top: 10px; font-size: 13pt; font-weight: 700; }
+.terms { margin-top: 36px; padding: 14px 16px; background: #f2f6f4; border-left: 3px solid #1f4e3d; font-size: 9.5pt; line-height: 1.55; }
+footer { position: absolute; bottom: 0.6in; left: 0.8in; right: 0.8in; font-size: 8.5pt; color: #8a92a1; border-top: 1px solid #e6e9ee; padding-top: 10px; display: flex; justify-content: space-between; }
+</style></head><body><div class="page">
+<header>
+  <div class="brand">Northwind Desks<small>480 Harrison Street, Suite 300<br>San Francisco, CA 94107<br>billing@northwind-desks.example · northwind-desks.example</small></div>
+  <div class="title"><h1>INVOICE</h1>
+    <dl><dt>Invoice no.</dt><dd>INV-1042</dd><dt>Issue date</dt><dd>November 2, 2026</dd><dt>Due date</dt><dd>December 2, 2026</dd></dl></div>
+</header>
+<section class="parties">
+  <div><h2>Bill to</h2><p><strong>Sara Malik</strong><br>Office Manager<br>Brightpath Studio<br>2140 Mission Street<br>San Francisco, CA 94110<br>sara@brightpath.example<br>+1 (415) 555-0148</p></div>
+  <div><h2>Ship to</h2><p>Brightpath Studio<br>2140 Mission Street, 2nd floor<br>San Francisco, CA 94110</p></div>
+</section>
+<table>
+  <thead><tr><th>Description</th><th class="n">Qty</th><th class="n">Unit price</th><th class="n">Amount</th></tr></thead>
+  <tbody>
+    <tr><td>Oak standing desk, 60 × 30 in<br><small>Dual motor, memory presets</small></td><td class="n">2</td><td class="n">$480.00</td><td class="n">$960.00</td></tr>
+    <tr><td>Under-desk cable tray</td><td class="n">2</td><td class="n">$35.00</td><td class="n">$70.00</td></tr>
+    <tr><td>Delivery and assembly</td><td class="n">1</td><td class="n">$120.00</td><td class="n">$120.00</td></tr>
+    <tr><td>Sales tax (8.625%)</td><td class="n"></td><td class="n"></td><td class="n">$99.19</td></tr>
+  </tbody>
+</table>
+<div class="totals">
+  <div><span>Subtotal</span><span>$1,150.00</span></div>
+  <div><span>Sales tax</span><span>$99.19</span></div>
+  <div class="grand"><span>Total due (USD)</span><span>$1,249.19</span></div>
+</div>
+<div class="terms"><strong>Payment terms: Net 30.</strong> Pay by bank transfer to Northwind Desks, account ending 4471, or by card at northwind-desks.example/pay. Please quote INV-1042 with your payment.</div>
+<footer><span>Thank you for your order.</span><span>A fictional sample document for the Inkfold demo.</span></footer>
+</div></body></html>
