@@ -13,12 +13,27 @@ function valuesOf(document) {
   return Object.fromEntries(Object.entries(document.fields).map(([key, field]) => [key, field.value]))
 }
 
+const PENDING = ['needs_review', 'failed']
+
+// The next document waiting for review, in the order they arrived, starting after this one.
+function nextToReview(documents, current) {
+  const waiting = documents
+    .filter((d) => d.id !== current.id && PENDING.includes(d.status))
+    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+  return { next: waiting.find((d) => d.created_at > current.created_at) || waiting[0], left: waiting.length }
+}
+
 function changedKeys(document, values) {
   return Object.keys(values).filter((key) => JSON.stringify(values[key]) !== JSON.stringify(document.fields[key].value))
 }
 
-export default function Review() {
+// Keyed by id, so moving to the next document starts with a clean page.
+export default function ReviewPage() {
   const { id } = useParams()
+  return <Review key={id} id={id} />
+}
+
+function Review({ id }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [document, setDocument] = useState(null)
@@ -30,6 +45,7 @@ export default function Review() {
   const [sendError, setSendError] = useState('')
   const [notice, setNotice] = useState(location.state?.duplicate ? 'You uploaded this file before, so here is the earlier copy.' : '')
   const pollStarted = useRef(null)
+  const [others, setOthers] = useState([])
 
   const show = useCallback((next) => {
     setDocument(next)
@@ -39,6 +55,10 @@ export default function Review() {
   useEffect(() => {
     api.document(id).then(show).catch((err) => setLoadError(err.status === 404 ? 'This document no longer exists.' : err.message))
   }, [id, show])
+
+  useEffect(() => {
+    api.documents().then((data) => setOthers(data.documents)).catch(() => {})
+  }, [id])
 
   // While n8n works, check back every two seconds, for up to two minutes.
   useEffect(() => {
@@ -77,6 +97,7 @@ export default function Review() {
   }
   if (!document) return <div className="page"><p className="muted" aria-busy="true">Loading...</p></div>
 
+  const queue = nextToReview(others, document)
   const locked = document.status === 'syncing' && !document.can_sync
   const hasInvoice = document.doc_type === 'invoice' || GROUPS[2].keys.some((key) => document.fields[key].value !== null)
   const groups = GROUPS.filter((group) => group.title !== 'Invoice' || hasInvoice)
@@ -119,7 +140,14 @@ export default function Review() {
 
   return (
     <div className="page review">
-      <Link to="/" className="back">← Documents</Link>
+      <div className="review-nav">
+        <Link to="/" className="back">← Documents</Link>
+        {queue.next && (
+          <Link to={`/documents/${queue.next.id}`} className="back">
+            Next to review{queue.left > 1 ? ` (${queue.left} waiting)` : ''} →
+          </Link>
+        )}
+      </div>
       <div className="review-head">
         <div>
           <h1>{document.title}</h1>

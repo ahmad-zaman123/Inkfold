@@ -32,7 +32,7 @@ export default function Documents({ user }) {
         {user.is_demo && <p className="lede small">Your demo already has the three samples, read and ready to review.</p>}
       </div>
 
-      <Upload />
+      <Upload onUploaded={load} />
       <p className="samples">
         No document to hand? Download a sample:{' '}
         {SAMPLES.map(([href, label], index) => (
