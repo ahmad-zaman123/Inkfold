@@ -85,6 +85,7 @@ export const api = {
     return request('/documents', { method: 'POST', form })
   },
   saveFields: (id, fields) => request(`/documents/${id}/fields`, { method: 'PATCH', json: { fields } }),
+  matches: (id) => request(`/documents/${id}/matches`),
   sync: (id) => request(`/documents/${id}/sync`, { method: 'POST' }),
   remove: (id) => request(`/documents/${id}`, { method: 'DELETE' }),
 }

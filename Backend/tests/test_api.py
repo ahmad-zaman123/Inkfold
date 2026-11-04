@@ -532,6 +532,69 @@ def test_sync_without_hubspot_or_n8n(build):
     assert client.get(f"/api/documents/{document['id']}", headers=auth).json()["status"] == "needs_review"
 
 
+# What's already in HubSpot
+
+
+def test_matches_finds_nothing_for_a_new_contact(client, auth, services):
+    document = uploaded(client, auth)
+    found = client.get(f"/api/documents/{document['id']}/matches", headers=auth).json()
+    assert found == {"available": True, "contact": None, "company": None, "deal": None}
+    searches = [r for r in services.requests if r.path.endswith("/search")]
+    assert [r.path for r in searches] == ["/crm/v3/objects/contacts/search", "/crm/v3/objects/companies/search"]
+    assert searches[0].body["filterGroups"][0]["filters"][0] == {"propertyName": "email", "operator": "EQ", "value": "omar@kestrel.example"}
+    # The company is looked up by the domain of a work email.
+    assert searches[1].body["filterGroups"][0]["filters"][0]["value"] == "kestrel.example"
+
+
+def test_matches_shows_existing_records_until_this_document_owns_them(client, auth, services):
+    services.found = {
+        "contacts": [{"id": "900", "properties": {"firstname": "Omar", "lastname": "Siddiqui", "email": "omar@kestrel.example"}, "updatedAt": "2026-03-03T10:00:00Z"}],
+        "companies": [{"id": "77", "properties": {"name": "Kestrel"}, "updatedAt": "2026-02-01T09:00:00Z"}],
+    }
+    document = uploaded(client, auth)
+    found = client.get(f"/api/documents/{document['id']}/matches", headers=auth).json()
+    assert found["contact"] == {
+        "id": "900", "name": "Omar Siddiqui", "updated_at": "2026-03-03T10:00:00Z",
+        "url": "https://app.hubspot.com/contacts/4242/record/0-1/900", "own": False,
+    }
+    assert found["company"]["name"] == "Kestrel" and found["company"]["own"] is False
+    client.post(f"/api/documents/{document['id']}/sync", headers=auth)
+    after = client.get(f"/api/documents/{document['id']}/matches", headers=auth).json()
+    # The fake upserts the contact as 900, the record it already found.
+    assert after["contact"]["own"] is True
+
+
+def test_matches_spots_an_invoice_already_sent_as_a_deal(client, auth, gemini, services):
+    gemini.replies = [dict(EXTRACTION, doc_type="invoice", fields=EXTRACTION["fields"] + [
+        {"key": "invoice.number", "value": "INV-7", "source": "INV-7", "confidence": 0.99},
+        {"key": "invoice.total", "value": "$90.00", "source": "$90.00", "confidence": 0.99},
+    ])]
+    services.found = {"deals": [{"id": "31", "properties": {"dealname": "Invoice INV-7 — Kestrel Logistics", "amount": "90.00"}, "updatedAt": "2026-03-03T10:00:00Z"}]}
+    document = uploaded(client, auth)
+    found = client.get(f"/api/documents/{document['id']}/matches", headers=auth).json()
+    assert found["deal"]["name"] == "Invoice INV-7 — Kestrel Logistics" and found["deal"]["amount"] == "90.00"
+    deal_search = next(r for r in services.requests if r.path == "/crm/v3/objects/deals/search")
+    assert deal_search.body["filterGroups"][0]["filters"][0]["value"] == "Invoice INV-7 — Kestrel Logistics"
+
+
+def test_matches_is_unavailable_without_a_token_or_when_hubspot_fails(build, client, auth, services):
+    document = uploaded(client, auth)
+    services.hubspot_status = 401
+    assert client.get(f"/api/documents/{document['id']}/matches", headers=auth).json() == {"available": False}
+    n8n_only = build(hubspot_token="", n8n_webhook_url=N8N_URL, n8n_shared_secret=SECRET)
+    other = sign_in(n8n_only, email="lena@example.com")
+    mine = uploaded(n8n_only, other, data=PNG + b"2")
+    services.requests.clear()
+    assert n8n_only.get(f"/api/documents/{mine['id']}/matches", headers=other).json() == {"available": False}
+    assert services.requests == []
+
+
+def test_matches_only_for_your_own_documents(client, auth):
+    document = uploaded(client, auth)
+    stranger = sign_in(client, email="mallory@example.com")
+    assert client.get(f"/api/documents/{document['id']}/matches", headers=stranger).status_code == 404
+
+
 # Sending through n8n
 
 

@@ -46,6 +46,7 @@ function Review({ id }) {
   const [notice, setNotice] = useState(location.state?.duplicate ? 'You uploaded this file before, so here is the earlier copy.' : '')
   const pollStarted = useRef(null)
   const [others, setOthers] = useState([])
+  const [matches, setMatches] = useState(null)
 
   const show = useCallback((next) => {
     setDocument(next)
@@ -76,6 +77,18 @@ function Review({ id }) {
     }, POLL_MS)
     return () => clearTimeout(timer)
   }, [document, id, show])
+
+  // Look up what HubSpot already has once the saved fields are ready to send, and again after each save.
+  const lookupKey = document?.can_sync ? document.updated_at : null
+  useEffect(() => {
+    setMatches(null)
+    if (!lookupKey) return undefined
+    let current = true
+    api.matches(id).then((found) => current && setMatches(found)).catch(() => {})
+    return () => {
+      current = false
+    }
+  }, [id, lookupKey])
 
   const dirtyKeys = useMemo(() => (document ? changedKeys(document, values) : []), [document, values])
   const dirty = dirtyKeys.length > 0
@@ -198,7 +211,7 @@ function Review({ id }) {
             </button>
           </div>
         </form>
-        <SyncPanel document={document} dirty={dirty} sending={sending} error={sendError} onSend={send} />
+        <SyncPanel document={document} matches={dirty ? null : matches} dirty={dirty} sending={sending} error={sendError} onSend={send} />
       </div>
     </div>
   )

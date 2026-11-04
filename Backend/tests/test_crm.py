@@ -232,3 +232,12 @@ def test_the_pipeline_is_read_once_per_client():
     client.push(RECORD)
     client.push(RECORD, existing={"deal_id": "102"})
     assert fake.paths().count(("GET", "/crm/v3/pipelines/deals/default")) == 1
+
+
+def test_find_matches_skips_searches_it_has_nothing_to_search_with():
+    fake = FakeHubSpot(companies=["12"])
+    found = hubspot(fake, portal_id="42").find_matches({"contact": {"email": None}, "company": {"name": "Brightpath Studio"}, "deal": None})
+    assert fake.paths() == [("POST", "/crm/v3/objects/companies/search")]
+    assert fake.calls[0]["body"]["filterGroups"][0]["filters"][0] == {"propertyName": "name", "operator": "EQ", "value": "Brightpath Studio"}
+    assert found["contact"] is None and found["deal"] is None
+    assert found["company"]["id"] == "12" and found["company"]["url"] == "https://app.hubspot.com/contacts/42/record/0-2/12"

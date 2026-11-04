@@ -68,6 +68,8 @@ class FakeServices:
         self.n8n_status = 200
         self.hubspot_status = None
         self.next_id = 500
+        # Search results by object type, such as {"contacts": [{"id": "900", ...}]}.
+        self.found = {}
 
     def __call__(self, request):
         body = json.loads(request.content) if request.content else None
@@ -79,7 +81,8 @@ class FakeServices:
         if request.url.path.endswith("/batch/upsert"):
             return httpx.Response(200, json={"results": [{"id": "900"}]})
         if request.url.path.endswith("/search"):
-            return httpx.Response(200, json={"total": 0, "results": []})
+            results = self.found.get(request.url.path.split("/")[4], [])
+            return httpx.Response(200, json={"total": len(results), "results": results})
         if request.method in ("POST", "PATCH") and "/crm/v3/" in request.url.path:
             self.next_id += 1
             return httpx.Response(200, json={"id": request.url.path.rsplit("/", 1)[1] if request.method == "PATCH" else str(self.next_id)})

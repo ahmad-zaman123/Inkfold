@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 TIMEOUT_SECONDS = 10
 MAX_RETRY_WAIT_SECONDS = 2
-OBJECT_TYPE_IDS = {"contacts": "0-1", "deals": "0-3"}
+OBJECT_TYPE_IDS = {"contacts": "0-1", "companies": "0-2", "deals": "0-3"}
 
 
 class CrmError(Exception):
@@ -122,6 +122,55 @@ class HubSpot:
         if not self.portal_id or not object_id:
             return None
         return f"https://app.hubspot.com/contacts/{self.portal_id}/record/{OBJECT_TYPE_IDS[object_type]}/{object_id}"
+
+    def _search(self, object_type, prop, value, properties):
+        found = self._request(
+            "POST",
+            f"/crm/v3/objects/{object_type}/search",
+            {
+                "filterGroups": [{"filters": [{"propertyName": prop, "operator": "EQ", "value": value}]}],
+                "properties": properties,
+                "limit": 1,
+            },
+        )
+        results = found.get("results") or []
+        return results[0] if results else None
+
+    def find_matches(self, record):
+        """The records already in HubSpot that sending `record` would touch: the same contact, company or deal."""
+        matches = {"contact": None, "company": None, "deal": None}
+        email = (record.get("contact") or {}).get("email")
+        try:
+            if email:
+                found = self._search("contacts", "email", email, ["firstname", "lastname", "email"])
+                if found:
+                    props = found.get("properties") or {}
+                    name = " ".join(v for v in (props.get("firstname"), props.get("lastname")) if v)
+                    matches["contact"] = self._match("contacts", found, name or props.get("email") or email)
+            company = record.get("company")
+            if company:
+                prop, value = ("domain", company["domain"]) if company.get("domain") else ("name", company["name"])
+                found = self._search("companies", prop, value, ["name", "domain"])
+                if found:
+                    props = found.get("properties") or {}
+                    matches["company"] = self._match("companies", found, props.get("name") or props.get("domain") or value)
+            deal = record.get("deal")
+            if deal:
+                found = self._search("deals", "dealname", deal["dealname"], ["dealname", "amount"])
+                if found:
+                    props = found.get("properties") or {}
+                    matches["deal"] = {**self._match("deals", found, props.get("dealname") or deal["dealname"]), "amount": props.get("amount")}
+        except _NotFound as missing:
+            raise CrmError(f"HubSpot couldn't find {missing}.") from None
+        return matches
+
+    def _match(self, object_type, found, name):
+        return {
+            "id": str(found["id"]),
+            "name": name,
+            "updated_at": found.get("updatedAt"),
+            "url": self._url(object_type, str(found["id"])),
+        }
 
     def push(self, record, existing=None):
         """Sends `record`. Passing the last result updates the same deal and note instead of adding new ones."""

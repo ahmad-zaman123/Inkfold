@@ -1,4 +1,4 @@
-import { formatWhen } from '../labels.js'
+import { formatDay, formatWhen } from '../labels.js'
 import StatusPill from './StatusPill.jsx'
 
 const CHANNELS = { direct: 'HubSpot', n8n: 'n8n workflow' }
@@ -13,8 +13,52 @@ function blockedReason(document, dirty) {
   return ''
 }
 
-export default function SyncPanel({ document, dirty, sending, error, onSend }) {
+function Existing({ match, children }) {
+  return (
+    <li>
+      {children}
+      {match.updated_at && <>, updated {formatDay(match.updated_at)}</>}.
+      {match.url && <> <a href={match.url} target="_blank" rel="noreferrer">Open</a></>}
+    </li>
+  )
+}
+
+// What sending would touch that's already in HubSpot. Records this document made itself are left out.
+function AlreadyThere({ matches }) {
+  const fresh = (kind) => (matches?.available && matches[kind] && !matches[kind].own ? matches[kind] : null)
+  const contact = fresh('contact')
+  const company = fresh('company')
+  const deal = fresh('deal')
+  return (
+    <>
+      {deal && (
+        <div className="banner warn existing" role="status">
+          <p className="existing-title">This deal may already be in HubSpot</p>
+          <ul>
+            <Existing match={deal}>
+              &ldquo;{deal.name}&rdquo;{Number.isFinite(Number(deal.amount)) && deal.amount !== null && <> ({Number(deal.amount).toLocaleString()})</>}
+            </Existing>
+          </ul>
+          <p>Sending adds a second deal with the same name.</p>
+        </div>
+      )}
+      {(contact || company) && (
+        <div className="banner info existing" role="status">
+          <p className="existing-title">Already in HubSpot</p>
+          <ul>
+            {contact && <Existing match={contact}>Contact {contact.name}</Existing>}
+            {company && <Existing match={company}>Company {company.name}</Existing>}
+          </ul>
+          <p>Sending updates {contact && company ? 'them' : 'it'} instead of adding {contact && company ? 'new ones' : 'a new one'}.</p>
+        </div>
+      )}
+    </>
+  )
+}
+
+export default function SyncPanel({ document, matches, dirty, sending, error, onSend }) {
   const reason = blockedReason(document, dirty)
+  const duplicateDeal = matches?.available && matches.deal && !matches.deal.own
   const crm = document.crm
   const links = crm && [
     crm.contact_url && ['Open contact', crm.contact_url],
@@ -28,8 +72,9 @@ export default function SyncPanel({ document, dirty, sending, error, onSend }) {
         <StatusPill status={document.status} />
       </div>
 
+      {!reason && <AlreadyThere matches={matches} />}
       <button type="button" className="button primary wide" onClick={onSend} disabled={Boolean(reason) || sending || !document.can_sync}>
-        {sending || document.status === 'syncing' ? 'Sending...' : document.status === 'sync_failed' ? 'Try again' : 'Send to HubSpot'}
+        {sending || document.status === 'syncing' ? 'Sending...' : document.status === 'sync_failed' ? 'Try again' : duplicateDeal && !reason ? 'Send anyway' : 'Send to HubSpot'}
       </button>
       <p className="hint" aria-live="polite">{reason}</p>
       {error && <p className="banner error" role="alert">{error}</p>}

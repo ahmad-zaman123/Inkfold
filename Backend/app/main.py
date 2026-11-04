@@ -57,6 +57,8 @@ RATE_LIMITS = {
     "reset_all": (200, timedelta(days=1), "Password reset is busy today. Please try again tomorrow."),
     "reset_use": (20, timedelta(hours=1), BUSY),
     "intake_check": (6, timedelta(minutes=10), "The inbox was checked a moment ago. Please wait a few minutes."),
+    # Each look-up is three HubSpot searches.
+    "crm_lookup": (60, timedelta(minutes=10), "Too many HubSpot look-ups. Please wait a few minutes."),
     "sync_user": (20, timedelta(days=1), "You've sent a lot to HubSpot today. Please try again tomorrow."),
 }
 SIGNATURES = (
@@ -583,6 +585,35 @@ def create_app(
             raise HTTPException(status_code=409, detail="Wait for the send to HubSpot to finish before editing.")
         return full(updated)
 
+    def hubspot_client():
+        return HubSpot(
+            settings["hubspot_token"],
+            portal_id=settings["hubspot_portal_id"] or None,
+            deal_stage=settings["hubspot_deal_stage"],
+            client=http,
+            base_url=settings.get("hubspot_base_url") or None,
+        )
+
+    @app.get("/api/documents/{document_id}/matches")
+    def crm_matches(document_id: str, user=Depends(current_user)):
+        """What's already in HubSpot for this document, so the reviewer knows before sending."""
+        document = own_document(document_id, user)
+        # Through n8n alone there's no token to search with.
+        if not settings["hubspot_token"]:
+            return {"available": False}
+        enforce_limit("crm_lookup", user["id"])
+        try:
+            found = hubspot_client().find_matches(to_crm_record(document["fields"], document["doc_type"]))
+        except CrmError as error:
+            logger.warning("HubSpot look-up failed: %s", error.message)
+            return {"available": False}
+        # Records this document made itself are the ones a resend updates, so they aren't a surprise.
+        crm = document["crm"] or {}
+        for kind, match in found.items():
+            if match:
+                match["own"] = match["id"] == str(crm.get(f"{kind}_id") or "")
+        return {"available": True, **found}
+
     @app.post("/api/documents/{document_id}/sync")
     def sync(document_id: str, user=Depends(current_user)):
         document = own_document(document_id, user)
@@ -616,15 +647,8 @@ def create_app(
                 store.update_document(document["id"], status="sync_failed", error=str(error))
             return full(store.get_document(document["id"]))
 
-        hubspot = HubSpot(
-            settings["hubspot_token"],
-            portal_id=settings["hubspot_portal_id"] or None,
-            deal_stage=settings["hubspot_deal_stage"],
-            client=http,
-            base_url=settings.get("hubspot_base_url") or None,
-        )
         try:
-            crm = hubspot.push(record, existing=document["crm"])
+            crm = hubspot_client().push(record, existing=document["crm"])
         except CrmError as error:
             store.add_sync_event(document["id"], "direct", "failed", error.message)
             store.update_document(document["id"], status="sync_failed", error=error.message)

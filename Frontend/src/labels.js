@@ -56,6 +56,10 @@ export const LOW_CONFIDENCE = 0.7
 export const ACCEPTED = '.pdf,.png,.jpg,.jpeg,.txt'
 export const MAX_BYTES = 4 * 1024 * 1024
 
+export function formatDay(iso) {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export function formatWhen(iso) {
   return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
