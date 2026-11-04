@@ -1,0 +1,249 @@
+{
+  "name": "Inkfold: document to HubSpot",
+  "nodes": [
+    {
+      "id": "b1d0c1a0-0001-4c5e-9a10-000000000001",
+      "name": "Inkfold webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inkfold",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "6f3c2a10-5b1e-4d7a-9c2e-8a1f0e4b7d21"
+    },
+    {
+      "id": "b1d0c1a0-0002-4c5e-9a10-000000000002",
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Checks the HMAC Inkfold sends, over the exact bytes received, so nobody else can trigger this workflow.\nconst crypto = require('crypto');\n\nconst TOLERANCE_SECONDS = 300;\nconst item = $input.first();\nconst headers = item.json.headers || {};\nconst timestamp = headers['x-inkfold-timestamp'] || '';\nconst signature = headers['x-inkfold-signature'] || '';\nconst secret = $env.INKFOLD_SHARED_SECRET || '';\nconst raw = await this.helpers.getBinaryDataBuffer(0, 'data');\n\nlet valid = Boolean(secret) && /^\\d+$/.test(timestamp) && signature.startsWith('sha256=');\nif (valid) {\n  valid = Math.abs(Date.now() / 1000 - Number(timestamp)) <= TOLERANCE_SECONDS;\n}\nif (valid) {\n  const expected = crypto.createHmac('sha256', secret).update(`${timestamp}.`).update(raw).digest('hex');\n  const given = signature.slice('sha256='.length);\n  valid = given.length === expected.length && crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected));\n}\n\nreturn [{ json: { valid, payload: valid ? JSON.parse(raw.toString('utf8')) : null } }];\n"
+      }
+    },
+    {
+      "id": "b1d0c1a0-0003-4c5e-9a10-000000000003",
+      "name": "Signature valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2b7e9a52-1c3d-4f60-8e91-0d5a7b3c4e10",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b1d0c1a0-0004-4c5e-9a10-000000000004",
+      "name": "Accept (202)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"accepted\": true } }}",
+        "options": {
+          "responseCode": 202
+        }
+      }
+    },
+    {
+      "id": "b1d0c1a0-0005-4c5e-9a10-000000000005",
+      "name": "Reject (401)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        420
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"detail\": \"Invalid signature.\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "b1d0c1a0-0006-4c5e-9a10-000000000006",
+      "name": "Sync to HubSpot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Creates or updates the HubSpot records, the same calls Inkfold makes when it talks to HubSpot directly\n// (Backend/app/crm.py). Never throws: any problem becomes a \"failed\" result sent back to Inkfold.\nconst BASE = ($env.HUBSPOT_BASE_URL || 'https://api.hubapi.com').replace(/\\/+$/, '');\nconst TOKEN = $env.HUBSPOT_TOKEN || '';\nconst PORTAL = $env.HUBSPOT_PORTAL_ID || '';\nconst DEAL_STAGE = $env.HUBSPOT_DEAL_STAGE || 'closedwon';\nconst OBJECT_TYPE_IDS = { contacts: '0-1', deals: '0-3' };\n\nconst { document_id, record, existing } = $input.first().json.payload;\nconst callbackUrl = $input.first().json.payload.callback_url;\nconst helpers = this.helpers;\n\nclass CrmError extends Error {}\nclass NotFound extends Error {}\n\nconst sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\nasync function request(method, path, body) {\n  for (const attempt of [1, 2]) {\n    let response;\n    try {\n      response = await helpers.httpRequest({\n        method,\n        url: BASE + path,\n        headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },\n        body,\n        json: true,\n        timeout: 10000,\n        returnFullResponse: true,\n        ignoreHttpStatusErrors: true,\n      });\n    } catch (error) {\n      if (attempt === 2) throw new CrmError(\"We couldn't reach HubSpot. Please try again.\");\n      continue;\n    }\n    const status = response.statusCode;\n    if (status === 429 || status >= 500) {\n      if (attempt === 2) throw new CrmError('HubSpot is busy right now. Please try again in a minute.');\n      const header = Number(response.headers?.['retry-after']);\n      const wait = Number.isFinite(header) ? Math.min(2, Math.max(0, header)) : 1;\n      await sleep(wait * 1000);\n      continue;\n    }\n    if (status === 401 || status === 403) throw new CrmError('HubSpot rejected the access token. Check HUBSPOT_TOKEN.');\n    if (status === 404) throw new NotFound(path);\n    if (status >= 400) {\n      const message = (response.body && response.body.message) || `status ${status}`;\n      throw new CrmError(`HubSpot didn't accept the record: ${message}`);\n    }\n    return response.body || {};\n  }\n}\n\nasync function createOrUpdate(objectType, existingId, properties) {\n  // A record deleted in HubSpot since the last sync is simply made again.\n  if (existingId) {\n    try {\n      return (await request('PATCH', `/crm/v3/objects/${objectType}/${existingId}`, { properties })).id;\n    } catch (error) {\n      if (!(error instanceof NotFound)) throw error;\n    }\n  }\n  return (await request('POST', `/crm/v3/objects/${objectType}`, { properties })).id;\n}\n\nasync function associate(fromType, fromId, toType, toId) {\n  await request('PUT', `/crm/v4/objects/${fromType}/${fromId}/associations/default/${toType}/${toId}`);\n}\n\nasync function saveCompany(company, existingId) {\n  if (existingId) return createOrUpdate('companies', existingId, company);\n  const [prop, value] = company.domain ? ['domain', company.domain] : ['name', company.name];\n  const found = await request('POST', '/crm/v3/objects/companies/search', {\n    filterGroups: [{ filters: [{ propertyName: prop, operator: 'EQ', value }] }],\n    limit: 1,\n  });\n  if (found.results && found.results.length) {\n    const id = found.results[0].id;\n    await request('PATCH', `/crm/v3/objects/companies/${id}`, { properties: company });\n    return id;\n  }\n  return createOrUpdate('companies', null, company);\n}\n\nfunction dealProperties(deal) {\n  const properties = { dealname: deal.dealname, amount: deal.amount, dealstage: DEAL_STAGE, pipeline: 'default' };\n  if (deal.currency) properties.deal_currency_code = deal.currency;\n  if (deal.closedate) properties.closedate = `${deal.closedate}T00:00:00Z`;\n  return properties;\n}\n\nconst url = (type, id) => (PORTAL && id ? `https://app.hubspot.com/contacts/${PORTAL}/record/${OBJECT_TYPE_IDS[type]}/${id}` : null);\n\nlet result;\ntry {\n  if (!TOKEN) throw new CrmError('The n8n workflow has no HubSpot token. Set HUBSPOT_TOKEN in n8n.');\n  const contact = record.contact;\n  const upserted = await request('POST', '/crm/v3/objects/contacts/batch/upsert', {\n    inputs: [{ idProperty: 'email', id: contact.email, properties: contact }],\n  });\n  const contactId = upserted.results[0].id;\n  const companyId = record.company ? await saveCompany(record.company, existing.company_id) : null;\n  const dealId = record.deal ? await createOrUpdate('deals', existing.deal_id, dealProperties(record.deal)) : null;\n  const noteId = record.note\n    ? await createOrUpdate('notes', existing.note_id, {\n        hs_note_body: record.note,\n        hs_timestamp: new Date().toISOString().replace(/\\.\\d{3}Z$/, 'Z'),\n      })\n    : null;\n\n  if (companyId) await associate('contacts', contactId, 'companies', companyId);\n  if (dealId) {\n    await associate('deals', dealId, 'contacts', contactId);\n    if (companyId) await associate('deals', dealId, 'companies', companyId);\n  }\n  if (noteId) await associate('notes', noteId, 'contacts', contactId);\n\n  result = {\n    document_id,\n    status: 'synced',\n    crm: {\n      contact_id: contactId,\n      company_id: companyId,\n      deal_id: dealId,\n      note_id: noteId,\n      contact_url: url('contacts', contactId),\n      deal_url: url('deals', dealId),\n    },\n    detail: '',\n  };\n} catch (error) {\n  const detail = error instanceof CrmError ? error.message : error instanceof NotFound ? `HubSpot couldn't find ${error.message}.` : 'The n8n workflow hit an unexpected error.';\n  result = { document_id, status: 'failed', crm: {}, detail };\n}\n\nreturn [{ json: { callback_url: callbackUrl, result } }];\n"
+      }
+    },
+    {
+      "id": "b1d0c1a0-0007-4c5e-9a10-000000000007",
+      "name": "Sign result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Signs the result the same way Inkfold signs its requests, so the API knows it came from this workflow.\nconst crypto = require('crypto');\n\nconst { callback_url, result } = $input.first().json;\nconst body = JSON.stringify(result);\nconst timestamp = String(Math.floor(Date.now() / 1000));\nconst signature = crypto.createHmac('sha256', $env.INKFOLD_SHARED_SECRET).update(`${timestamp}.${body}`).digest('hex');\n\nreturn [{ json: { callback_url, body, timestamp, signature: `sha256=${signature}` } }];\n"
+      }
+    },
+    {
+      "id": "b1d0c1a0-0008-4c5e-9a10-000000000008",
+      "name": "Send result to Inkfold",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callback_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Inkfold-Timestamp",
+              "value": "={{ $json.timestamp }}"
+            },
+            {
+              "name": "X-Inkfold-Signature",
+              "value": "={{ $json.signature }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.body }}",
+        "options": {
+          "timeout": 10000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Inkfold webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Signature valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature valid?": {
+      "main": [
+        [
+          {
+            "node": "Accept (202)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject (401)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accept (202)": {
+      "main": [
+        [
+          {
+            "node": "Sync to HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Sign result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign result": {
+      "main": [
+        [
+          {
+            "node": "Send result to Inkfold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false,
+  "id": "fwDocToHubspot01"
+}
