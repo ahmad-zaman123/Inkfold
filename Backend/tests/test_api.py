@@ -10,8 +10,9 @@ import pytest
 from google.genai import errors
 
 from app.demo_data import DEMO_DOCUMENTS
+from app.main import verify_google_token
 from app.sync import SIGNATURE_HEADER, TIMESTAMP_HEADER, signed_headers
-from conftest import EXTRACTION, N8N_URL, SECRET, make_settings, sign_in
+from conftest import EXTRACTION, N8N_URL, SECRET, FakeGoogle, make_settings, sign_in
 
 SAMPLES = Path(__file__).resolve().parents[2] / "samples"
 PNG = b"\x89PNG\r\n\x1a\n" + b"card-bytes"
@@ -130,14 +131,14 @@ def forgot(client, email="sara@example.com"):
 
 
 def test_reset_is_hidden_and_refused_without_email_settings(client):
-    assert client.get("/api/auth/options").json() == {"password_reset": False}
+    assert client.get("/api/auth/options").json()["password_reset"] is False
     assert forgot(client).status_code == 503
 
 
 def test_reset_by_email_sets_a_new_password_and_ends_sessions(mail_client, mailer):
     auth = sign_in(mail_client)
     earlier = old_token(mail_client, auth)
-    assert mail_client.get("/api/auth/options").json() == {"password_reset": True}
+    assert mail_client.get("/api/auth/options").json()["password_reset"] is True
     response = forgot(mail_client, "Sara@Example.com")
     assert response.json() == {"detail": "If that email has an account, we've sent a reset link."}
     [email] = mailer.sent
@@ -202,6 +203,80 @@ def test_reset_needs_a_long_enough_password(mail_client, mailer):
     forgot(mail_client)
     response = mail_client.post("/api/password/reset", json={"token": reset_token(mailer.sent[0]), "new_password": "tiny7ch"})
     assert response.status_code == 422 and "tiny7ch" not in response.text
+
+
+GOOGLE_ID = "123-test.apps.googleusercontent.com"
+
+
+@pytest.fixture
+def google():
+    return FakeGoogle()
+
+
+@pytest.fixture
+def google_client(build, google):
+    return build(verify_google=google, google_client_id=GOOGLE_ID)
+
+
+def google_sign_in(client, credential="sara@example.com"):
+    return client.post("/api/auth/google", json={"credential": credential})
+
+
+def test_google_is_off_without_a_client_id(client):
+    assert client.get("/api/auth/options").json()["google"] is False
+    assert google_sign_in(client).status_code == 404
+
+
+def test_google_creates_an_account_without_a_password(google_client, google):
+    assert google_client.get("/api/auth/options").json()["google"] is True
+    response = google_sign_in(google_client, "Sara@Example.com")
+    assert response.status_code == 200, response.text
+    user = response.json()["user"]
+    assert user["email"] == "sara@example.com" and user["has_password"] is False
+    assert google.calls == [("Sara@Example.com", GOOGLE_ID)]
+    # Signing in again finds the same account.
+    assert google_sign_in(google_client, "sara@example.com").json()["user"]["id"] == user["id"]
+    # With no password yet, one can be set without a current password.
+    auth = {"Authorization": "Bearer " + response.json()["token"]}
+    assert google_client.post("/api/me/password", json={"new_password": "a-brand-new-secret"}, headers=auth).status_code == 200
+    assert google_client.post("/api/auth/login", json={"email": "sara@example.com", "password": "a-brand-new-secret"}).status_code == 200
+
+
+def test_google_takes_over_an_unverified_signup_and_drops_its_password(google_client):
+    # Someone registered this address with a password, without proving they own it.
+    squatter = old_token(google_client, sign_in(google_client, "sara@example.com"))
+    owner = google_sign_in(google_client).json()
+    assert owner["user"]["has_password"] is False
+    assert google_client.get("/api/me", headers=squatter).status_code == 401
+    assert google_client.post("/api/auth/login", json={"email": "sara@example.com", "password": "correct-horse-battery"}).status_code == 401
+
+
+def test_google_keeps_the_password_of_a_verified_account(google_client, mailer, build, google):
+    mail_client = build(send_email=mailer, verify_google=google, google_client_id=GOOGLE_ID)
+    sign_in(mail_client)
+    forgot(mail_client)
+    mail_client.post("/api/password/reset", json={"token": reset_token(mailer.sent[0]), "new_password": "a-brand-new-secret"})
+    assert google_sign_in(mail_client).json()["user"]["has_password"] is True
+    assert mail_client.post("/api/auth/login", json={"email": "sara@example.com", "password": "a-brand-new-secret"}).status_code == 200
+
+
+def test_google_refuses_bad_tokens_and_unconfirmed_emails(google_client, google):
+    assert google_sign_in(google_client, "forged").json() == {"detail": "Google sign-in could not be verified. Please try again."}
+    google.claims["unverified"] = {"email": "sara@example.com", "email_verified": False}
+    google.claims["no-email"] = {"email_verified": True}
+    assert google_sign_in(google_client, "unverified").json() == {"detail": "Google did not confirm this email address."}
+    assert google_sign_in(google_client, "no-email").status_code == 401
+    assert google_client.post("/api/auth/google", json={"credential": "x" * 8001}).status_code == 422
+
+
+def test_google_never_opens_a_demo_account(google_client):
+    demo = google_client.post("/api/auth/demo").json()["user"]["email"]
+    assert google_sign_in(google_client, demo).status_code == 403
+
+
+def test_google_sign_in_is_rate_limited_like_passwords(google_client):
+    codes = [google_sign_in(google_client, "forged").status_code for _ in range(21)]
+    assert codes[:20] == [401] * 20 and codes[20] == 429
 
 
 def test_demo_opens_a_private_account_with_the_samples(client, gemini):
@@ -570,3 +645,9 @@ def test_callback_for_an_unknown_document(n8n):
 
 def test_health(client):
     assert client.get("/api/health").json() == {"ok": True}
+
+
+def test_the_real_google_check_turns_a_malformed_token_into_value_error():
+    # A malformed token fails before any keys are fetched, so this stays offline.
+    with pytest.raises(ValueError):
+        verify_google_token("not-a-jwt", GOOGLE_ID)

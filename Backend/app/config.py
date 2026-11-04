@@ -46,6 +46,8 @@ def load_settings():
         "public_api_url": os.environ.get("PUBLIC_API_URL", "http://localhost:8020").rstrip("/"),
         "cors_origins": cors_origins,
         "app_url": app_url,
+        # Without it, Continue with Google is turned off.
+        "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
         # Without these, password reset is hidden.
         "smtp": (smtp_user and smtp_password and {
             "host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),

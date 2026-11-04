@@ -173,6 +173,15 @@ button, input, textarea { font: inherit; color: inherit; }
 .account-heading { font-size: 1.05rem; margin: 6px 0 4px; }
 .auth-lead { color: var(--ink-2); margin: 0 0 10px; }
 .forgot { justify-self: end; font-size: 0.9rem; margin-top: -2px; }
+.google-signin { display: grid; gap: 14px; margin-bottom: 8px; }
+.google-wrap { position: relative; }
+.google-wrap.is-loading { opacity: 0.6; }
+.google-wrap.is-busy .google-overlay { pointer-events: none; }
+.google-wrap.is-busy .google-btn { opacity: 0.7; }
+.google-wrap:hover .google-btn { border-color: var(--ink-2); }
+.google-overlay { position: absolute; inset: 0; display: flex; justify-content: center; opacity: 0; overflow: hidden; }
+.google-or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 0.82rem; }
+.google-or::before, .google-or::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
 .switch { color: var(--muted); font-size: 0.92rem; margin: 14px 0 0; }
 
 /* Inputs */

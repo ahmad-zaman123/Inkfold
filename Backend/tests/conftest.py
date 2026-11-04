@@ -107,6 +107,7 @@ def make_settings(database_url, **overrides):
         "cors_origins": ["http://localhost:5180"],
         "app_url": "http://localhost:5180",
         "smtp": None,
+        "google_client_id": "",
         "uploads_per_user_day": 10,
         "uploads_per_day": 100,
         "behind_proxy": False,
@@ -123,6 +124,24 @@ def gemini():
 @pytest.fixture
 def services():
     return FakeServices()
+
+
+def refuse_google(credential, client_id):
+    raise AssertionError("Tests never call Google")
+
+
+class FakeGoogle:
+    """Stands in for Google's token check. Each credential is the email it signs in, unless set in `claims`."""
+
+    def __init__(self):
+        self.claims = {}
+        self.calls = []
+
+    def __call__(self, credential, client_id):
+        self.calls.append((credential, client_id))
+        if credential == "forged":
+            raise ValueError("Invalid Google token")
+        return self.claims.get(credential, {"email": credential, "email_verified": True})
 
 
 class FakeMailer:
@@ -147,13 +166,14 @@ def mailer():
 def build(store, gemini, services, database_url):
     """Builds a TestClient. Pass setting overrides, such as n8n_webhook_url, and send_email."""
 
-    def _build(send_email=None, **overrides):
+    def _build(send_email=None, verify_google=None, **overrides):
         app = create_app(
             make_settings(database_url, **overrides),
             store=store,
             gemini_client=gemini,
             http_client=httpx.Client(transport=httpx.MockTransport(services)),
             send_email=send_email,
+            verify_google=verify_google or refuse_google,
         )
         return TestClient(app)
 

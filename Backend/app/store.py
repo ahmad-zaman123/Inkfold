@@ -168,6 +168,29 @@ class Store:
             )
             self._end_sessions(db, user_id)
 
+    def find_or_create_verified_user(self, email):
+        """The account for an email that Google has confirmed, created without a password if it's new."""
+        email = email.lower()
+        with self._connect() as db:
+            created = db.execute(
+                "INSERT INTO users (id, email, email_verified) VALUES (%s, %s, true) "
+                f"ON CONFLICT (email) DO NOTHING RETURNING {USER_COLUMNS}",
+                (uuid.uuid4(), email),
+            ).fetchone()
+            if created:
+                return created
+            existing = db.execute(
+                "SELECT id, is_demo, email_verified, password_hash FROM users WHERE email = %s FOR UPDATE", (email,)
+            ).fetchone()
+            if existing["is_demo"]:
+                return None
+            if not existing["email_verified"]:
+                # Sign-up doesn't prove who owns an email, so a password set before now may be a stranger's.
+                db.execute("UPDATE users SET email_verified = true, password_hash = NULL WHERE id = %s", (existing["id"],))
+                if existing["password_hash"]:
+                    self._end_sessions(db, existing["id"])
+            return db.execute(f"SELECT {USER_COLUMNS} FROM users WHERE id = %s", (existing["id"],)).fetchone()
+
     def create_reset_token(self, email):
         """Return a new single-use reset token, or None if there's no such account or it's a demo."""
         token = secrets.token_urlsafe(32)

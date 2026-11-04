@@ -67,6 +67,7 @@ export const api = {
   register: (email, password) => request('/auth/register', { method: 'POST', json: { email, password } }),
   login: (email, password) => request('/auth/login', { method: 'POST', json: { email, password } }),
   demo: () => request('/auth/demo', { method: 'POST' }),
+  google: (credential) => request('/auth/google', { method: 'POST', json: { credential } }),
   authOptions: () => request('/auth/options'),
   forgotPassword: (email) => request('/password/forgot', { method: 'POST', json: { email } }),
   resetPassword: (token, new_password) => request('/password/reset', { method: 'POST', json: { token, new_password } }),

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
+import GoogleButton from '../components/GoogleButton.jsx'
 
 export default function Auth({ mode, onSignedIn }) {
   const registering = mode === 'register'
@@ -19,6 +20,21 @@ export default function Auth({ mode, onSignedIn }) {
       .catch(() => {})
   }, [registering])
 
+  // Kept stable so the Google button isn't set up again on every render.
+  const onGoogleCredential = useCallback(
+    async (credential) => {
+      setBusy(true)
+      setError('')
+      try {
+        onSignedIn(await api.google(credential))
+      } catch (err) {
+        setError(err.message)
+        setBusy(false)
+      }
+    },
+    [onSignedIn],
+  )
+
   async function submit(event) {
     event.preventDefault()
     setBusy(true)
@@ -35,6 +51,7 @@ export default function Auth({ mode, onSignedIn }) {
     <div className="auth">
       <form className="card auth-card" onSubmit={submit} noValidate={false}>
         <h1>{registering ? 'Create an account' : 'Sign in'}</h1>
+        <GoogleButton onCredential={onGoogleCredential} onError={setError} busy={busy} />
         <label className="field-label" htmlFor="email">Email</label>
         <input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <label className="field-label" htmlFor="password">Password</label>

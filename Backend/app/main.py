@@ -59,6 +59,18 @@ SIGNATURES = (
 )
 
 
+def verify_google_token(credential, client_id):
+    """Return the claims of a Google ID token, checking its signature, audience and expiry."""
+    from google.auth.exceptions import GoogleAuthError
+    from google.auth.transport import requests
+    from google.oauth2 import id_token
+
+    try:
+        return id_token.verify_oauth2_token(credential, requests.Request(), client_id)
+    except (ValueError, GoogleAuthError) as error:
+        raise ValueError("Invalid Google token") from error
+
+
 def storable(value):
     # Postgres can't hold NUL characters, and lone surrogates can't be encoded at all.
     if any(c == "\x00" or 0xD800 <= ord(c) <= 0xDFFF for c in value):
@@ -77,6 +89,10 @@ class Credentials(BaseModel):
 class Registration(BaseModel):
     email: EmailStr
     password: StorableText = Field(min_length=8, max_length=200)
+
+
+class GoogleSignIn(BaseModel):
+    credential: str = Field(min_length=1, max_length=8000)
 
 
 class ForgotPassword(BaseModel):
@@ -184,7 +200,9 @@ def parse_id(value):
         raise HTTPException(status_code=404, detail="Document not found.")
 
 
-def create_app(settings=None, *, store=None, gemini_client=None, http_client=None, send_email=None):
+def create_app(
+    settings=None, *, store=None, gemini_client=None, http_client=None, send_email=None, verify_google=verify_google_token
+):
     settings = settings or load_settings()
     if send_email is None and settings["smtp"]:
         send_email = smtp_sender(**settings["smtp"])
@@ -262,7 +280,24 @@ def create_app(settings=None, *, store=None, gemini_client=None, http_client=Non
 
     @app.get("/api/auth/options")
     def auth_options():
-        return {"password_reset": send_email is not None}
+        return {"password_reset": send_email is not None, "google": bool(settings["google_client_id"])}
+
+    @app.post("/api/auth/google")
+    def google_sign_in(body: GoogleSignIn, request: Request):
+        if not settings["google_client_id"]:
+            raise HTTPException(status_code=404, detail="Not found")
+        enforce_limit("login", client_ip(request))
+        try:
+            claims = verify_google(body.credential, settings["google_client_id"])
+        except ValueError:
+            raise HTTPException(status_code=401, detail="Google sign-in could not be verified. Please try again.")
+        email = str(claims.get("email") or "")
+        if not email or claims.get("email_verified") is not True:
+            raise HTTPException(status_code=401, detail="Google did not confirm this email address.")
+        user = store.find_or_create_verified_user(email)
+        if user is None:
+            raise HTTPException(status_code=403, detail="This account can't be signed into with Google.")
+        return session_for(user)
 
     @app.post("/api/auth/register", status_code=201)
     def register(body: Registration, request: Request):
