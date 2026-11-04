@@ -19,6 +19,11 @@ def _list(name, default=()):
 
 def load_settings():
     load_dotenv(BASE_DIR / ".env")
+    cors_origins = _list("CORS_ALLOWED_ORIGINS")
+    # Links in emails point at the frontend, the first allowed origin.
+    app_url = (cors_origins[0] if cors_origins else "http://localhost:5180").rstrip("/")
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_password = os.environ.get("SMTP_PASSWORD", "")
     missing = [n for n in ("DATABASE_URL", "JWT_SECRET", "GEMINI_API_KEY") if not os.environ.get(n)]
     n8n_url = os.environ.get("N8N_WEBHOOK_URL", "")
     if n8n_url and not os.environ.get("N8N_SHARED_SECRET"):
@@ -39,7 +44,17 @@ def load_settings():
         "n8n_shared_secret": os.environ.get("N8N_SHARED_SECRET", ""),
         # n8n posts its result here, so it must be an address n8n can reach.
         "public_api_url": os.environ.get("PUBLIC_API_URL", "http://localhost:8020").rstrip("/"),
-        "cors_origins": _list("CORS_ALLOWED_ORIGINS"),
+        "cors_origins": cors_origins,
+        "app_url": app_url,
+        # Without these, password reset is hidden.
+        "smtp": (smtp_user and smtp_password and {
+            "host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
+            "port": int(os.environ.get("SMTP_PORT", "587")),
+            "user": smtp_user,
+            "password": smtp_password,
+            "sender": os.environ.get("EMAIL_FROM") or smtp_user,
+            "logo_url": f"{app_url}/email-logo.png",
+        }) or None,
         "uploads_per_user_day": int(os.environ.get("UPLOADS_PER_USER_DAY", "10")),
         "uploads_per_day": int(os.environ.get("UPLOADS_PER_DAY", "100")),
         # Vercel sets the client address itself. Elsewhere the header could be forged.

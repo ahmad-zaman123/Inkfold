@@ -67,6 +67,9 @@ export const api = {
   register: (email, password) => request('/auth/register', { method: 'POST', json: { email, password } }),
   login: (email, password) => request('/auth/login', { method: 'POST', json: { email, password } }),
   demo: () => request('/auth/demo', { method: 'POST' }),
+  authOptions: () => request('/auth/options'),
+  forgotPassword: (email) => request('/password/forgot', { method: 'POST', json: { email } }),
+  resetPassword: (token, new_password) => request('/password/reset', { method: 'POST', json: { token, new_password } }),
   me: () => request('/me'),
   changePassword: (current_password, new_password) =>
     request('/me/password', { method: 'POST', json: { current_password, new_password } }),

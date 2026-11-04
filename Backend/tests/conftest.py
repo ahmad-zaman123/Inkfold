@@ -38,7 +38,7 @@ def store(database_url):
     store = Store(database_url)
     store.init_schema()
     with psycopg.connect(database_url, autocommit=True) as db:
-        db.execute("TRUNCATE users, documents, sync_events, rate_limits CASCADE")
+        db.execute("TRUNCATE users, documents, sync_events, rate_limits, password_reset_tokens CASCADE")
     yield store
     store.close()
 
@@ -105,6 +105,8 @@ def make_settings(database_url, **overrides):
         "n8n_shared_secret": "",
         "public_api_url": "http://api.test",
         "cors_origins": ["http://localhost:5180"],
+        "app_url": "http://localhost:5180",
+        "smtp": None,
         "uploads_per_user_day": 10,
         "uploads_per_day": 100,
         "behind_proxy": False,
@@ -123,16 +125,35 @@ def services():
     return FakeServices()
 
 
+class FakeMailer:
+    """Keeps the emails instead of sending them. Set `error` to make sending fail."""
+
+    def __init__(self):
+        self.sent = []
+        self.error = None
+
+    def __call__(self, to, subject, heading, text, action_label, action_url, note_lead, note):
+        if self.error:
+            raise self.error
+        self.sent.append(SimpleNamespace(to=to, subject=subject, text=text, url=action_url))
+
+
+@pytest.fixture
+def mailer():
+    return FakeMailer()
+
+
 @pytest.fixture
 def build(store, gemini, services, database_url):
-    """Builds a TestClient. Pass setting overrides, such as n8n_webhook_url."""
+    """Builds a TestClient. Pass setting overrides, such as n8n_webhook_url, and send_email."""
 
-    def _build(**overrides):
+    def _build(send_email=None, **overrides):
         app = create_app(
             make_settings(database_url, **overrides),
             store=store,
             gemini_client=gemini,
             http_client=httpx.Client(transport=httpx.MockTransport(services)),
+            send_email=send_email,
         )
         return TestClient(app)
 

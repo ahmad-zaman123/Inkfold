@@ -18,6 +18,7 @@ from . import demo_data
 from .config import load_settings
 from .crm import CrmError, HubSpot
 from .extract import ExtractionFailed, ExtractionUnavailable, extract_document
+from .mailer import smtp_sender
 from .normalize import apply_edits, missing_for_sync, normalize_fields, to_crm_record
 from .schema import FIELDS
 from .store import SYNC_STALE_AFTER, Store
@@ -33,6 +34,8 @@ BUSY = "Too many requests. Please try again in a little while."
 AI_BUSY = "The AI service is busy right now. Please try again in a little while."
 WRONG_TYPE = "Upload a PDF, PNG, JPG or TXT file."
 NEEDS_EMAIL = "Add a valid email before sending to HubSpot."
+RESET_SENT = "If that email has an account, we've sent a reset link."
+RESET_INVALID = "This reset link is invalid or has expired."
 # Name: (allowed hits, window, message). Kept in Postgres because serverless instances share no memory.
 RATE_LIMITS = {
     "login": (20, timedelta(minutes=15), "Too many sign-in attempts. Please try again in a few minutes."),
@@ -42,6 +45,11 @@ RATE_LIMITS = {
     "upload_user": (None, timedelta(days=1), "You've reached today's upload limit. Please try again tomorrow."),
     "upload_all": (None, timedelta(days=1), "Uploads are full for today. Please try again tomorrow."),
     "password_change": (10, timedelta(minutes=15), "Too many attempts. Please try again in a few minutes."),
+    "reset_ip": (10, timedelta(hours=1), BUSY),
+    # Over this one nothing is sent, but the reply doesn't change, so it can't reveal accounts.
+    "reset_email": (3, timedelta(hours=1), None),
+    "reset_all": (200, timedelta(days=1), "Password reset is busy today. Please try again tomorrow."),
+    "reset_use": (20, timedelta(hours=1), BUSY),
     "sync_user": (20, timedelta(days=1), "You've sent a lot to HubSpot today. Please try again tomorrow."),
 }
 SIGNATURES = (
@@ -69,6 +77,15 @@ class Credentials(BaseModel):
 class Registration(BaseModel):
     email: EmailStr
     password: StorableText = Field(min_length=8, max_length=200)
+
+
+class ForgotPassword(BaseModel):
+    email: EmailStr
+
+
+class ResetPassword(BaseModel):
+    token: str = Field(min_length=1, max_length=200)
+    new_password: StorableText = Field(min_length=8, max_length=200)
 
 
 class PasswordChange(BaseModel):
@@ -167,8 +184,10 @@ def parse_id(value):
         raise HTTPException(status_code=404, detail="Document not found.")
 
 
-def create_app(settings=None, *, store=None, gemini_client=None, http_client=None):
+def create_app(settings=None, *, store=None, gemini_client=None, http_client=None, send_email=None):
     settings = settings or load_settings()
+    if send_email is None and settings["smtp"]:
+        send_email = smtp_sender(**settings["smtp"])
     store = store or Store(settings["database_url"])
     jwt_secret = settings["jwt_secret"]
     rate_limits = dict(RATE_LIMITS)
@@ -241,6 +260,10 @@ def create_app(settings=None, *, store=None, gemini_client=None, http_client=Non
     def health():
         return {"ok": True}
 
+    @app.get("/api/auth/options")
+    def auth_options():
+        return {"password_reset": send_email is not None}
+
     @app.post("/api/auth/register", status_code=201)
     def register(body: Registration, request: Request):
         enforce_limit("register", client_ip(request))
@@ -281,6 +304,39 @@ def create_app(settings=None, *, store=None, gemini_client=None, http_client=Non
         store.set_password(user["id"], body.new_password)
         # Every older session just ended, so this one needs a new token to carry on.
         return session_for(store.get_user(user["id"]))
+
+    @app.post("/api/password/forgot")
+    def forgot_password(body: ForgotPassword, request: Request):
+        if send_email is None:
+            raise HTTPException(status_code=503, detail="Password reset isn't available right now.")
+        enforce_limit("reset_ip", client_ip(request))
+        enforce_limit("reset_all", "all")
+        email = body.email.lower()
+        limit, window, _ = rate_limits["reset_email"]
+        token = None if store.hit_rate_limit(f"reset_email:{email}", limit, window) else store.create_reset_token(email)
+        if token:
+            try:
+                send_email(
+                    email,
+                    "Reset your Inkfold password",
+                    "Reset your password",
+                    f"Someone asked to reset the password for the Inkfold account {email}. "
+                    "Use the button below to choose a new one.",
+                    "Choose a new password",
+                    f"{settings['app_url']}/reset-password?token={token}",
+                    "Expires in 15 minutes.",
+                    "If this wasn't you, you can ignore this email and your password won't change.",
+                )
+            except Exception:
+                logger.exception("Could not send a password reset email")
+        return {"detail": RESET_SENT}
+
+    @app.post("/api/password/reset")
+    def reset_password(body: ResetPassword, request: Request):
+        enforce_limit("reset_use", client_ip(request))
+        if not store.reset_password(body.token, body.new_password):
+            raise HTTPException(status_code=400, detail=RESET_INVALID)
+        return {"ok": True}
 
     @app.post("/api/documents", status_code=201)
     def upload(response: Response, file: UploadFile = File(...), user=Depends(current_user)):

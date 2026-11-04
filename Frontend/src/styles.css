@@ -171,6 +171,8 @@ button, input, textarea { font: inherit; color: inherit; }
 .auth-card .button { margin-top: 10px; }
 .account-email { color: var(--ink-2); margin: 0 0 10px; overflow-wrap: anywhere; }
 .account-heading { font-size: 1.05rem; margin: 6px 0 4px; }
+.auth-lead { color: var(--ink-2); margin: 0 0 10px; }
+.forgot { justify-self: end; font-size: 0.9rem; margin-top: -2px; }
 .switch { color: var(--muted); font-size: 0.92rem; margin: 14px 0 0; }
 
 /* Inputs */

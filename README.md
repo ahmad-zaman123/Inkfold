@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
   <img src="https://img.shields.io/badge/HubSpot-CRM%20API-FF7A59?logo=hubspot&logoColor=white&style=flat-square" alt="HubSpot" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-157%20passing-2ea44f?style=flat-square" alt="157 tests passing" />
+  <img src="https://img.shields.io/badge/tests-169%20passing-2ea44f?style=flat-square" alt="169 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -87,7 +87,7 @@ To send records through n8n instead of straight to HubSpot, see [`n8n/README.md`
 **4. Tests**
 
 ```bash
-cd Backend && .venv/bin/python -m pytest      # 147 tests, real Postgres, fake Gemini and HubSpot
+cd Backend && .venv/bin/python -m pytest      # 159 tests, real Postgres, fake Gemini and HubSpot
 node --test n8n/test/*.test.mjs                # 10 tests for the n8n Code nodes
 Backend/.venv/bin/python n8n/test/e2e.py       # API + n8n + fake HubSpot round trip
 ```
@@ -110,7 +110,9 @@ No test calls Gemini or HubSpot, so none of them need keys.
 | `N8N_WEBHOOK_URL` | no | When set, records go through the n8n workflow instead of straight to HubSpot. |
 | `N8N_SHARED_SECRET` | with n8n | Signs requests both ways. Use a long random string. |
 | `PUBLIC_API_URL` | with n8n | The address n8n can reach this API at, for its callback. |
-| `CORS_ALLOWED_ORIGINS` | prod | The deployed frontend's address, comma-separated if more than one. |
+| `CORS_ALLOWED_ORIGINS` | prod | The deployed frontend's address, comma-separated if more than one. The first is also used for links in emails. |
+| `SMTP_USER`, `SMTP_PASSWORD` | for reset | Turn on password reset by email. For Gmail, use an [app password](https://myaccount.google.com/apppasswords). Without them, "Forgot password?" is hidden. |
+| `SMTP_HOST`, `SMTP_PORT`, `EMAIL_FROM` | no | Default to Gmail (`smtp.gmail.com`, `587`) and the `SMTP_USER` address. |
 | `UPLOADS_PER_USER_DAY`, `UPLOADS_PER_DAY` | no | Upload limits. Default 10 per user and 100 in total per day. |
 
 Frontend (`Frontend/.env`): `VITE_API_URL` is the deployed backend's address, left empty locally because Vite proxies `/api`.
@@ -178,7 +180,7 @@ Contacts are upserted by email, and a re-send updates the same company, deal and
 If a Gemini model is overloaded, out of quota or retired, the next one in the list is tried, within a 40 second budget. A bad API key is reported as a setup problem, not as a broken file.
 
 ### 🔐 Accounts
-Passwords hashed with scrypt, 8-hour sessions, and changing your password signs out every other session. Wrong current-password guesses are rate limited.
+Passwords hashed with scrypt and 8-hour sessions. Changing or resetting a password signs out every other session. Reset links are single use, expire in 15 minutes and are stored only as hashes, and the reply never reveals whether an email has an account.
 
 </td>
 <td width="50%" valign="top">
@@ -206,6 +208,8 @@ Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timest
 | `POST` | `/api/auth/register`, `/api/auth/login` | Create an account or sign in. Returns a token. |
 | `POST` | `/api/auth/demo` | Create a private demo account with sample documents. |
 | `GET` | `/api/me` | The signed-in user. |
+| `GET` | `/api/auth/options` | Which sign-in extras are turned on, such as password reset. |
+| `POST` | `/api/password/forgot`, `/api/password/reset` | Email a reset link, then use it to set a new password. |
 | `POST` | `/api/me/password` | Change the password. Signs out every other session and returns a new token. |
 | `POST` | `/api/documents` | Upload a file (multipart `file`). Returns the extracted document. |
 | `GET` | `/api/documents`, `/api/documents/{id}` | List documents, or one with its fields, issues and sync history. |
@@ -244,20 +248,21 @@ Inkfold/
 │   │   ├── crm.py          HubSpot client: upserts, search, associations, stage lookup
 │   │   ├── demo_data.py    the demo's pre-read sample documents
 │   │   ├── extract.py      Gemini extraction with model fallback
+│   │   ├── mailer.py       password reset emails over SMTP
 │   │   ├── main.py         API routes, auth, uploads, rate limits
 │   │   ├── normalize.py    field cleaning and cross-checks
 │   │   ├── schema.py       the fields Inkfold extracts
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              147 tests against a real Postgres
+│   ├── tests/              159 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json
 ├── Frontend/
 │   ├── src/
 │   │   ├── components/     upload, field rows, line items, HubSpot panel
-│   │   ├── pages/          landing, sign-in, account, documents, review
+│   │   ├── pages/          landing, sign-in, password reset, account, documents, review
 │   │   ├── api.js          API client
 │   │   └── styles.css
 │   ├── package.json

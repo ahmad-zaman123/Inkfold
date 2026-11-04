@@ -5,7 +5,9 @@ import Header from './components/Header.jsx'
 import Account from './pages/Account.jsx'
 import Auth from './pages/Auth.jsx'
 import Documents from './pages/Documents.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
 import Landing from './pages/Landing.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import Review from './pages/Review.jsx'
 
 export default function App() {
@@ -52,6 +54,8 @@ export default function App() {
           <Route path="/" element={user ? <Documents user={user} /> : <Landing onDemo={signedIn} />} />
           <Route path="/login" element={user ? <Navigate to="/" replace /> : <Auth mode="login" onSignedIn={signedIn} />} />
           <Route path="/register" element={user ? <Navigate to="/" replace /> : <Auth mode="register" onSignedIn={signedIn} />} />
+          <Route path="/forgot-password" element={user ? <Navigate to="/account" replace /> : <ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/account" element={signedInOnly(<Account user={user} onSession={applySession} />)} />
           <Route path="/documents/:id" element={signedInOnly(<Review />)} />
           <Route path="*" element={<Navigate to="/" replace />} />

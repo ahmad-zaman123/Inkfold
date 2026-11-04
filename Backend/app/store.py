@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import os
+import secrets
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -14,6 +15,8 @@ from psycopg_pool import ConnectionPool
 DEMO_LIFETIME = timedelta(days=2)
 # A send that never heard back from n8n can be tried again after this long.
 SYNC_STALE_AFTER = timedelta(minutes=10)
+# Short, because anyone who sees the link in the inbox can use it.
+RESET_TOKEN_LIFETIME = timedelta(minutes=15)
 # How long a request waits for the first database connection before giving up.
 POOL_OPEN_TIMEOUT = 10
 USER_COLUMNS = "id, email, is_demo, password_changed_at, password_hash IS NOT NULL AS has_password"
@@ -59,6 +62,12 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     expires_at TIMESTAMPTZ NOT NULL
 );
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token_hash TEXT PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMPTZ NOT NULL
+);
 """
 
 
@@ -72,6 +81,10 @@ def verify_password(password, stored):
     salt, digest = stored.split(":")
     candidate = hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt), n=2**14, r=8, p=1)
     return hmac.compare_digest(candidate.hex(), digest)
+
+
+def _token_hash(token):
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 # Compared against when the email is unknown, so response time doesn't reveal which accounts exist.
@@ -154,6 +167,39 @@ class Store:
                 "UPDATE users SET password_hash = %s WHERE id = %s AND NOT is_demo", (hash_password(password), user_id)
             )
             self._end_sessions(db, user_id)
+
+    def create_reset_token(self, email):
+        """Return a new single-use reset token, or None if there's no such account or it's a demo."""
+        token = secrets.token_urlsafe(32)
+        with self._connect() as db:
+            user = db.execute("SELECT id FROM users WHERE email = %s AND NOT is_demo", (email.lower(),)).fetchone()
+            if user is None:
+                return None
+            db.execute("DELETE FROM password_reset_tokens WHERE user_id = %s OR expires_at < now()", (user["id"],))
+            # Only a hash is stored, so reading the database doesn't give anyone a working link.
+            db.execute(
+                "INSERT INTO password_reset_tokens (token_hash, user_id, expires_at) VALUES (%s, %s, %s)",
+                (_token_hash(token), user["id"], datetime.now(timezone.utc) + RESET_TOKEN_LIFETIME),
+            )
+        return token
+
+    def reset_password(self, token, password):
+        """Use up a reset token to set a new password. False if the token is invalid or expired."""
+        password_hash = hash_password(password)
+        with self._connect() as db:
+            row = db.execute(
+                "DELETE FROM password_reset_tokens WHERE token_hash = %s RETURNING user_id, expires_at > now() AS valid",
+                (_token_hash(token),),
+            ).fetchone()
+            if row is None or not row["valid"]:
+                return False
+            # The link reached this inbox, which proves who owns the email.
+            db.execute(
+                "UPDATE users SET password_hash = %s, email_verified = true WHERE id = %s",
+                (password_hash, row["user_id"]),
+            )
+            self._end_sessions(db, row["user_id"])
+        return True
 
     def create_demo_user(self, documents):
         """A private demo account with the sample documents already read. It can't be signed into with a password."""

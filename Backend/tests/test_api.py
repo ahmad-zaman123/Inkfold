@@ -116,6 +116,94 @@ def test_demo_accounts_cannot_set_a_password(client):
     assert client.post("/api/auth/login", json={"email": session["user"]["email"], "password": "a-brand-new-secret"}).status_code == 401
 
 
+@pytest.fixture
+def mail_client(build, mailer):
+    return build(send_email=mailer)
+
+
+def reset_token(email):
+    return email.url.split("token=", 1)[1]
+
+
+def forgot(client, email="sara@example.com"):
+    return client.post("/api/password/forgot", json={"email": email})
+
+
+def test_reset_is_hidden_and_refused_without_email_settings(client):
+    assert client.get("/api/auth/options").json() == {"password_reset": False}
+    assert forgot(client).status_code == 503
+
+
+def test_reset_by_email_sets_a_new_password_and_ends_sessions(mail_client, mailer):
+    auth = sign_in(mail_client)
+    earlier = old_token(mail_client, auth)
+    assert mail_client.get("/api/auth/options").json() == {"password_reset": True}
+    response = forgot(mail_client, "Sara@Example.com")
+    assert response.json() == {"detail": "If that email has an account, we've sent a reset link."}
+    [email] = mailer.sent
+    assert email.to == "sara@example.com" and email.url.startswith("http://localhost:5180/reset-password?token=")
+    reset = mail_client.post("/api/password/reset", json={"token": reset_token(email), "new_password": "a-brand-new-secret"})
+    assert reset.status_code == 200
+    assert mail_client.get("/api/me", headers=earlier).status_code == 401
+    login = lambda password: mail_client.post("/api/auth/login", json={"email": "sara@example.com", "password": password}).status_code
+    assert login("correct-horse-battery") == 401 and login("a-brand-new-secret") == 200
+
+
+def test_reset_links_work_once_and_only_the_newest(mail_client, mailer):
+    sign_in(mail_client)
+    forgot(mail_client)
+    forgot(mail_client)
+    first, second = (reset_token(email) for email in mailer.sent)
+    use = lambda token: mail_client.post("/api/password/reset", json={"token": token, "new_password": "a-brand-new-secret"})
+    assert use(first).json() == {"detail": "This reset link is invalid or has expired."}
+    assert use(second).status_code == 200
+    assert use(second).status_code == 400
+    assert use("made-up-token").status_code == 400
+
+
+def test_reset_links_expire(mail_client, mailer, database_url):
+    sign_in(mail_client)
+    forgot(mail_client)
+    with psycopg.connect(database_url, autocommit=True) as db:
+        db.execute("UPDATE password_reset_tokens SET expires_at = now() - interval '1 second'")
+    response = mail_client.post("/api/password/reset", json={"token": reset_token(mailer.sent[0]), "new_password": "a-brand-new-secret"})
+    assert response.status_code == 400
+
+
+def test_reset_does_not_reveal_which_emails_have_accounts(mail_client, mailer):
+    sign_in(mail_client)
+    demo = mail_client.post("/api/auth/demo").json()["user"]["email"]
+    replies = {forgot(mail_client, email).text for email in ("nobody@example.com", demo, "sara@example.com")}
+    assert len(replies) == 1
+    assert [email.to for email in mailer.sent] == ["sara@example.com"]
+
+
+def test_reset_emails_are_limited_per_address_without_saying_so(mail_client, mailer):
+    sign_in(mail_client)
+    replies = [forgot(mail_client) for _ in range(4)]
+    assert {r.status_code for r in replies} == {200} and len({r.text for r in replies}) == 1
+    assert len(mailer.sent) == 3
+
+
+def test_reset_requests_are_limited_per_ip(mail_client):
+    codes = [forgot(mail_client, f"person{n}@example.com").status_code for n in range(11)]
+    assert codes[:10] == [200] * 10 and codes[10] == 429
+
+
+def test_a_failed_email_still_gets_the_same_reply(mail_client, mailer):
+    sign_in(mail_client)
+    mailer.error = OSError("SMTP is down")
+    response = forgot(mail_client)
+    assert response.status_code == 200 and response.json()["detail"].startswith("If that email has an account")
+
+
+def test_reset_needs_a_long_enough_password(mail_client, mailer):
+    sign_in(mail_client)
+    forgot(mail_client)
+    response = mail_client.post("/api/password/reset", json={"token": reset_token(mailer.sent[0]), "new_password": "tiny7ch"})
+    assert response.status_code == 422 and "tiny7ch" not in response.text
+
+
 def test_demo_opens_a_private_account_with_the_samples(client, gemini):
     first = client.post("/api/auth/demo").json()
     second = client.post("/api/auth/demo").json()

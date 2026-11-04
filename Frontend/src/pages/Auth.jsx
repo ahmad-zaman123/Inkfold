@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 
@@ -8,6 +8,16 @@ export default function Auth({ mode, onSignedIn }) {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [canReset, setCanReset] = useState(false)
+
+  useEffect(() => {
+    if (registering) return
+    // The link only shows when the server can send email.
+    api
+      .authOptions()
+      .then((options) => setCanReset(options.password_reset))
+      .catch(() => {})
+  }, [registering])
 
   async function submit(event) {
     event.preventDefault()
@@ -39,6 +49,9 @@ export default function Auth({ mode, onSignedIn }) {
           aria-describedby={registering ? 'password-hint' : undefined}
         />
         {registering && <p id="password-hint" className="hint">At least 8 characters.</p>}
+        {!registering && canReset && (
+          <Link to="/forgot-password" className="forgot">Forgot password?</Link>
+        )}
         {error && <p className="banner error" role="alert">{error}</p>}
         <button type="submit" className="button primary wide" disabled={busy}>
           {busy ? 'One moment...' : registering ? 'Create account' : 'Sign in'}
