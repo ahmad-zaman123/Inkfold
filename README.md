@@ -7,6 +7,7 @@
 
 <p align="center">
   <a href="https://github.com/ahmad-zaman123/Inkfold/actions/workflows/ci.yml"><img src="https://github.com/ahmad-zaman123/Inkfold/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://inkfold-nine.vercel.app"><img src="https://img.shields.io/badge/live%20demo-inkfold--nine.vercel.app-000?logo=vercel&logoColor=white&style=flat-square" alt="Live demo" /></a>
   <img src="https://img.shields.io/badge/FastAPI-0.162-009688?logo=fastapi&logoColor=white&style=flat-square" alt="FastAPI" />
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black&style=flat-square" alt="React 18" />
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
@@ -14,6 +15,11 @@
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
   <img src="https://img.shields.io/badge/tests-151%20passing-2ea44f?style=flat-square" alt="151 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
+</p>
+
+<p align="center">
+  <a href="https://inkfold-nine.vercel.app"><b>Live demo → inkfold-nine.vercel.app</b></a><br/>
+  <sub>Click <b>Try the live demo</b> to review three sample documents and send one to HubSpot. No sign-up needed.</sub>
 </p>
 
 <p align="center">
