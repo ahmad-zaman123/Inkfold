@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
   <img src="https://img.shields.io/badge/HubSpot-CRM%20API-FF7A59?logo=hubspot&logoColor=white&style=flat-square" alt="HubSpot" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-206%20passing-2ea44f?style=flat-square" alt="206 tests passing" />
+  <img src="https://img.shields.io/badge/tests-212%20passing-2ea44f?style=flat-square" alt="212 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -177,6 +177,9 @@ Each field keeps the text it was read from and a confidence score. Low-confidenc
 ### 🧮 Checks the model can't skip
 Line items are added up and compared with the total. A due date before the issue date is flagged. A deal is only created when the total is clean.
 
+### 👀 Warns before a duplicate
+Before you send, the review page looks up what HubSpot already has. An existing contact or company is shown with when it was last updated, and sending updates it. A deal with the same name, such as an invoice sent once before from another file, is a warning, and the button changes to "Send anyway".
+
 ### 🔁 Safe to send twice
 Contacts are upserted by email, and a re-send updates the same company, deal and note. A record deleted in HubSpot since the last send is made again. Sending is claimed with one atomic update, so a double click can't create two deals.
 
@@ -197,6 +200,9 @@ The same HubSpot calls run either in the API or in an n8n workflow you can exten
 
 ### ✍️ Signed both ways
 Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timestamp and exact body, checked in constant time and refused after 5 minutes. A repeated callback changes nothing.
+
+### 📚 Batch upload
+Drop up to 10 files at once. They're read two at a time, each with its own result, and "Next to review" walks you through whatever is still waiting.
 
 ### 🛡️ Careful uploads
 4 MB limit, file type checked from the bytes rather than the name, filenames cleaned, duplicate uploads spotted, and per-user and global daily limits stored in Postgres.
@@ -224,6 +230,7 @@ Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timest
 | `POST` | `/api/intake/check` | Read new emails now. |
 | `POST` | `/api/intake/address` | Replace your intake address. The old one stops working. |
 | `POST` | `/api/intake/poll` | The scheduled check, with `Authorization: Bearer INTAKE_POLL_SECRET`. |
+| `GET` | `/api/documents/{id}/matches` | The contact, company and deal already in HubSpot that a send would touch. |
 | `GET` | `/api/documents`, `/api/documents/{id}` | List documents, or one with its fields, issues and sync history. |
 | `PATCH` | `/api/documents/{id}/fields` | Save edits, as `{"fields": {"contact.phone": "+1 617 555 0123"}}`. |
 | `POST` | `/api/documents/{id}/sync` | Send to HubSpot. `422` with the missing fields if it isn't ready. |
@@ -236,6 +243,8 @@ Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timest
 - Scanned PDFs work when Gemini can read them; there's no separate OCR step.
 - Deleting a document in Inkfold leaves its HubSpot records in place.
 - Deals use HubSpot's default pipeline.
+- The duplicate warning needs `HUBSPOT_TOKEN`. With n8n alone there's nothing to search HubSpot with, so it doesn't show.
+- A batch counts against the daily upload limit like single uploads, so the default of 10 per user is one full batch.
 - One check reads up to 5 documents, so it stays inside Vercel's time limit. Anything more waits for the next check.
 - GitHub runs scheduled jobs on a best-effort basis, so "every 10 minutes" can stretch at busy times. It also pauses them after 60 days without a commit.
 
@@ -270,7 +279,7 @@ Inkfold/
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              196 tests against a real Postgres
+│   ├── tests/              202 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json
