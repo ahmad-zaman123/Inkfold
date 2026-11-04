@@ -47,11 +47,18 @@ Copying details from PDFs and photos into a CRM is slow, and a model that does i
 |---|---|---|
 | PDFs, PNG and JPEG photos and text files, with each field's source text and a confidence score | Emails, phone numbers (E.164), dates, money, currencies and domains, plus whether line items add up to the total | A contact (upserted by email), its company, a deal for an invoice and a note, all linked, in HubSpot |
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/synced-dark.png" />
+    <img src="docs/screenshots/synced.png" alt="An invoice after sending: the contact, company, deal and note IDs in HubSpot, links to open them, and the send history" width="860" />
+  </picture>
+</p>
+
 The sample documents in [`samples/`](samples/) are made up. All the people and companies in them are fictional.
 
 ## 🚀 Quick start
 
-**Prerequisites:** Python 3.12, Node 18+ and a [Gemini API key](https://aistudio.google.com). A HubSpot [private app token](https://developers.hubspot.com/docs/api/private-apps) with read and write scopes for `crm.objects.contacts`, `crm.objects.companies` and `crm.objects.deals` is needed to send records. No Docker needed: `scripts/dev_db.py` starts a bundled Postgres.
+**Prerequisites:** Python 3.12, Node 18+ and a [Gemini API key](https://aistudio.google.com). Sending records needs a HubSpot service key (see **HubSpot setup** below). No Docker needed: `scripts/dev_db.py` starts a bundled Postgres.
 
 **1. Backend** → `http://localhost:8020`
 
@@ -97,7 +104,7 @@ No test calls Gemini or HubSpot, so none of them need keys.
 | `JWT_SECRET` | **yes** | Signs session tokens. Use a long random string. |
 | `GEMINI_API_KEY` | **yes** | Reads the documents. |
 | `GEMINI_EXTRACT_MODELS` | no | Comma-separated, tried in order when one is busy, out of quota or retired. |
-| `HUBSPOT_TOKEN` | to send | Private app token. Without it (and without n8n), "Send to HubSpot" explains that HubSpot isn't connected. |
+| `HUBSPOT_TOKEN` | to send | HubSpot service key, or a legacy private app token on older accounts. Without it (and without n8n), "Send to HubSpot" explains that HubSpot isn't connected. |
 | `HUBSPOT_PORTAL_ID` | no | Your HubSpot account ID, so the app can link to the records it made. |
 | `HUBSPOT_DEAL_STAGE` | no | Stage for new deals, by name or ID. Defaults to `closedwon`, since an invoice is a sale that happened. Newer HubSpot accounts use numeric stage IDs, so a name is looked up in the default pipeline. |
 | `N8N_WEBHOOK_URL` | no | When set, records go through the n8n workflow instead of straight to HubSpot. |
@@ -107,6 +114,28 @@ No test calls Gemini or HubSpot, so none of them need keys.
 | `UPLOADS_PER_USER_DAY`, `UPLOADS_PER_DAY` | no | Upload limits. Default 10 per user and 100 in total per day. |
 
 Frontend (`Frontend/.env`): `VITE_API_URL` is the deployed backend's address, left empty locally because Vite proxies `/api`.
+
+</details>
+
+<details>
+<summary><b>🔑 HubSpot setup</b> (free CRM is enough)</summary>
+<br/>
+
+1. In HubSpot, open **Settings → Development → Legacy apps** and choose **Create a service key** (new accounts no longer offer private apps there). Name it Inkfold. On older accounts a legacy private app works too.
+2. Give it read and write access to `crm.objects.contacts`, `crm.objects.companies` and `crm.objects.deals`.
+3. Put the key in `HUBSPOT_TOKEN`. Your account ID (in the account menu, top right) goes in `HUBSPOT_PORTAL_ID`, so the app can link to the records it creates.
+
+Deals land in the default pipeline at the stage in `HUBSPOT_DEAL_STAGE`. Newer accounts use numeric stage IDs, so Inkfold reads the pipeline and finds "Closed won" for you.
+
+</details>
+
+<details>
+<summary><b>🔑 Demo account</b> (live site)</summary>
+<br/>
+
+Click **Try the live demo**. You get a private account with three sample documents already read: an invoice, a business card and a lead form. Review them, fix the flagged phone number, and send one to HubSpot. Uploading your own file uses Gemini as normal.
+
+Demo accounts are deleted after two days. Each address can open 10 demos an hour, and 500 can be opened a day in total.
 
 </details>
 
@@ -167,7 +196,7 @@ Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timest
 </tr>
 </table>
 
-## 📡 API
+## 🔌 API
 
 | Method | Path | What it does |
 |---|---|---|
@@ -181,13 +210,68 @@ Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timest
 | `POST` | `/api/sync/callback` | n8n's signed result. |
 | `DELETE` | `/api/documents/{id}` | Delete a document from Inkfold (not from HubSpot). |
 
-## 📏 Limits
+## 🚦 Limits
 
 - One contact per document. Inkfold reads a single person from each file.
 - Scanned PDFs work when Gemini can read them; there's no separate OCR step.
 - Deleting a document in Inkfold leaves its HubSpot records in place.
 - Deals use HubSpot's default pipeline.
 
+## 🛠️ Tech stack
+
+| Layer | Tech |
+|---|---|
+| **Backend** | Python 3.12, FastAPI, psycopg 3, PyJWT, phonenumbers |
+| **AI** | Google Gemini with structured JSON output and model fallback |
+| **CRM** | HubSpot CRM API v3 and v4 associations |
+| **Automation** | n8n 2.x workflow with Code nodes and HMAC-signed webhooks |
+| **Frontend** | React 18, Vite, React Router |
+| **Data** | PostgreSQL on Neon |
+| **Deployment** | Vercel (serverless Python + static React) |
+
+## 🗂️ Project structure
+
+```
+Inkfold/
+├── Backend/
+│   ├── api/index.py        Vercel entry point
+│   ├── app/
+│   │   ├── config.py       settings from the environment
+│   │   ├── crm.py          HubSpot client: upserts, search, associations, stage lookup
+│   │   ├── demo_data.py    the demo's pre-read sample documents
+│   │   ├── extract.py      Gemini extraction with model fallback
+│   │   ├── main.py         API routes, auth, uploads, rate limits
+│   │   ├── normalize.py    field cleaning and cross-checks
+│   │   ├── schema.py       the fields Inkfold extracts
+│   │   ├── store.py        schema and every SQL query
+│   │   └── sync.py         signing and the n8n hand-off
+│   ├── scripts/            local Postgres and table setup
+│   ├── tests/              141 tests against a real Postgres
+│   ├── asgi.py
+│   ├── requirements.txt
+│   └── vercel.json
+├── Frontend/
+│   ├── src/
+│   │   ├── components/     upload, field rows, line items, HubSpot panel
+│   │   ├── pages/          landing, sign-in, documents, review
+│   │   ├── api.js          API client
+│   │   └── styles.css
+│   ├── package.json
+│   └── vercel.json
+├── n8n/
+│   ├── document-to-hubspot.json   the workflow to import
+│   ├── src/                       its Code nodes as plain files
+│   ├── test/                      Code node tests and the end-to-end check
+│   └── run-local.sh
+├── samples/                fictional invoice, business card and lead form
+└── docs/screenshots/
+```
+
+## ☁️ Deployment & CI
+
+- **Vercel**, as two projects from this repo: `Backend` (serverless Python) and `Frontend` (Vite). Postgres is on Neon. Set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `HUBSPOT_TOKEN`, `HUBSPOT_PORTAL_ID` and `CORS_ALLOWED_ORIGINS` on the backend, and `VITE_API_URL` on the frontend. Create the tables once with `scripts/init_db.py`.
+- **CI** (`ci.yml`) runs the backend tests, the n8n Code node tests, a check that the workflow JSON matches its source files, and the frontend build on every push and pull request.
+
 ## 📄 License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2026 Ahmad Zaman
