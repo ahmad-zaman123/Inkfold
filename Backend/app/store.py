@@ -14,6 +14,8 @@ from psycopg_pool import ConnectionPool
 DEMO_LIFETIME = timedelta(days=2)
 # A send that never heard back from n8n can be tried again after this long.
 SYNC_STALE_AFTER = timedelta(minutes=10)
+# How long a request waits for the first database connection before giving up.
+POOL_OPEN_TIMEOUT = 10
 DOCUMENT_COLUMNS = "id, user_id, filename, mime, size, sha256, doc_type, status, error, fields, crm, created_at, updated_at"
 
 SCHEMA = """
@@ -81,7 +83,7 @@ class Store:
 
     def _get_pool(self):
         if self._pool is None:
-            self._pool = ConnectionPool(
+            pool = ConnectionPool(
                 self.database_url,
                 open=False,
                 min_size=1,
@@ -91,7 +93,13 @@ class Store:
                 # PgBouncer-style poolers share server connections across clients.
                 kwargs={"row_factory": dict_row, "prepare_threshold": None},
             )
-            self._pool.open(wait=True, timeout=30)
+            try:
+                pool.open(wait=True, timeout=POOL_OPEN_TIMEOUT)
+            except Exception:
+                # A pool that failed to open is closed for good, so drop it and let the next request try again.
+                pool.close()
+                raise
+            self._pool = pool
         return self._pool
 
     def close(self):
