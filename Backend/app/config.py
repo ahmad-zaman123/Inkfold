@@ -24,6 +24,8 @@ def load_settings():
     app_url = (cors_origins[0] if cors_origins else "http://localhost:5180").rstrip("/")
     smtp_user = os.environ.get("SMTP_USER", "")
     smtp_password = os.environ.get("SMTP_PASSWORD", "")
+    intake_inbox = os.environ.get("INTAKE_EMAIL", "")
+    intake_password = os.environ.get("INTAKE_PASSWORD", "")
     missing = [n for n in ("DATABASE_URL", "JWT_SECRET", "GEMINI_API_KEY") if not os.environ.get(n)]
     n8n_url = os.environ.get("N8N_WEBHOOK_URL", "")
     if n8n_url and not os.environ.get("N8N_SHARED_SECRET"):
@@ -46,6 +48,15 @@ def load_settings():
         "public_api_url": os.environ.get("PUBLIC_API_URL", "http://localhost:8020").rstrip("/"),
         "cors_origins": cors_origins,
         "app_url": app_url,
+        # The inbox that forwarded documents arrive in. Without it, email intake is hidden.
+        "intake": (intake_inbox and intake_password and {
+            "inbox": intake_inbox,
+            "host": os.environ.get("INTAKE_IMAP_HOST", "imap.gmail.com"),
+            "user": intake_inbox,
+            "password": intake_password,
+        }) or None,
+        # Lets a scheduled job check the inbox. Without it, only the "Check inbox" button does.
+        "intake_poll_secret": os.environ.get("INTAKE_POLL_SECRET", ""),
         # Without it, Continue with Google is turned off.
         "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
         # Without these, password reset is hidden.

@@ -1,4 +1,6 @@
 import hashlib
+import hmac
+import imaplib
 import logging
 import os
 import re
@@ -18,6 +20,7 @@ from . import demo_data
 from .config import load_settings
 from .crm import CrmError, HubSpot
 from .extract import ExtractionFailed, ExtractionUnavailable, extract_document
+from .intake import MAX_FILES_PER_EMAIL, ImapMailbox, address_for, new_token, parse_message, token_for
 from .mailer import smtp_sender
 from .normalize import apply_edits, missing_for_sync, normalize_fields, to_crm_record
 from .schema import FIELDS
@@ -34,6 +37,9 @@ BUSY = "Too many requests. Please try again in a little while."
 AI_BUSY = "The AI service is busy right now. Please try again in a little while."
 WRONG_TYPE = "Upload a PDF, PNG, JPG or TXT file."
 NEEDS_EMAIL = "Add a valid email before sending to HubSpot."
+# Each document can take up to 40 seconds with Gemini, so one check stays well inside Vercel's 300.
+MAX_DOCUMENTS_PER_CHECK = MAX_FILES_PER_EMAIL
+INBOX_DOWN = "Couldn't reach the intake inbox. Please try again in a little while."
 RESET_SENT = "If that email has an account, we've sent a reset link."
 RESET_INVALID = "This reset link is invalid or has expired."
 # Name: (allowed hits, window, message). Kept in Postgres because serverless instances share no memory.
@@ -50,6 +56,7 @@ RATE_LIMITS = {
     "reset_email": (3, timedelta(hours=1), None),
     "reset_all": (200, timedelta(days=1), "Password reset is busy today. Please try again tomorrow."),
     "reset_use": (20, timedelta(hours=1), BUSY),
+    "intake_check": (6, timedelta(minutes=10), "The inbox was checked a moment ago. Please wait a few minutes."),
     "sync_user": (20, timedelta(days=1), "You've sent a lot to HubSpot today. Please try again tomorrow."),
 }
 SIGNATURES = (
@@ -169,7 +176,7 @@ def is_stale_sync(document):
 def public_document(document, events=None):
     summary = {
         key: document[key]
-        for key in ("id", "filename", "mime", "size", "doc_type", "status", "error", "created_at", "updated_at")
+        for key in ("id", "filename", "mime", "size", "doc_type", "status", "error", "source", "created_at", "updated_at")
     }
     summary["id"] = str(document["id"])
     summary["title"] = title_of(document)
@@ -201,9 +208,21 @@ def parse_id(value):
 
 
 def create_app(
-    settings=None, *, store=None, gemini_client=None, http_client=None, send_email=None, verify_google=verify_google_token
+    settings=None,
+    *,
+    store=None,
+    gemini_client=None,
+    http_client=None,
+    send_email=None,
+    verify_google=verify_google_token,
+    mailbox=None,
 ):
     settings = settings or load_settings()
+    intake = settings["intake"]
+    if mailbox is None and intake:
+        mailbox = ImapMailbox(intake["host"], intake["user"], intake["password"])
+    if mailbox is None:
+        intake = None
     if send_email is None and settings["smtp"]:
         send_email = smtp_sender(**settings["smtp"])
     store = store or Store(settings["database_url"])
@@ -373,15 +392,14 @@ def create_app(
             raise HTTPException(status_code=400, detail=RESET_INVALID)
         return {"ok": True}
 
-    @app.post("/api/documents", status_code=201)
-    def upload(response: Response, file: UploadFile = File(...), user=Depends(current_user)):
-        data = file.file.read(MAX_UPLOAD_BYTES + 1)
+    def ingest(user, filename, data, source=None):
+        """Read one file into a document. Returns (document, duplicate). Raises HTTPException when it can't."""
         if len(data) > MAX_UPLOAD_BYTES:
             raise HTTPException(status_code=413, detail="Files can be up to 4 MB.")
         if not data:
             raise HTTPException(status_code=400, detail="This file is empty.")
         try:
-            filename = clean_filename(file.filename)
+            filename = clean_filename(filename)
         except ValueError:
             filename = "document"
         mime = sniff_mime(data, filename)
@@ -391,13 +409,12 @@ def create_app(
         sha256 = hashlib.sha256(data).hexdigest()
         existing = store.find_document_by_hash(user["id"], sha256)
         if existing:
-            response.status_code = 200
-            return {**full(existing), "duplicate": True}
+            return existing, True
 
         # Counted before the AI call, because the call is what each limit protects.
         enforce_limit("upload_user", user["id"])
         enforce_limit("upload_all", "all")
-        document = {"filename": filename, "mime": mime, "size": len(data), "sha256": sha256}
+        document = {"filename": filename, "mime": mime, "size": len(data), "sha256": sha256, "source": source}
         try:
             extracted = extract_document(data, mime, settings, client=gemini_client)
         except ExtractionUnavailable:
@@ -410,10 +427,134 @@ def create_app(
 
         stored = store.add_document(user["id"], **document)
         if stored is None:
-            # The same file arrived twice at once. Show the copy that was saved first.
+            # The same file arrived twice at once. Use the copy that was saved first.
+            return store.find_document_by_hash(user["id"], sha256), True
+        return stored, False
+
+    @app.post("/api/documents", status_code=201)
+    def upload(response: Response, file: UploadFile = File(...), user=Depends(current_user)):
+        document, duplicate = ingest(user, file.filename, file.file.read(MAX_UPLOAD_BYTES + 1))
+        if duplicate:
             response.status_code = 200
-            return {**full(store.find_document_by_hash(user["id"], sha256)), "duplicate": True}
-        return {**full(stored), "duplicate": False}
+        return {**full(document), "duplicate": duplicate}
+
+    # Email intake
+
+    def read_email(raw, budget):
+        """Handle one email. Returns how many documents it used, or None to leave it for a later check."""
+        parsed = parse_message(raw)
+        token = token_for(parsed.recipients, intake["inbox"])
+        # Per address, so the same email sent to two accounts reaches both.
+        key = f"{token or '-'}:{parsed.key}"
+        claim = store.claim_intake_message(key)
+        if claim == "busy":
+            return None
+        if claim == "done":
+            return 0
+        user = store.user_by_intake_token(token) if token else None
+        record = {"sender": parsed.sender, "subject": parsed.subject}
+        if user is None:
+            store.finish_intake_message(
+                key, user_id=None, **record, status="ignored", detail="Not sent to an Inkfold address.", document_ids=[]
+            )
+            return 0
+        files = [(name, data) for name, data in parsed.files if sniff_mime(data, clean_filename(name))]
+        if len(files) > budget:
+            store.release_intake_message(key)
+            return None
+        source = {"via": "email", "from": parsed.sender, "subject": parsed.subject}
+        added, repeated, problem = [], [], ""
+        for name, data in files:
+            try:
+                document, duplicate = ingest(user, name, data, source)
+            except HTTPException as error:
+                if error.status_code == 503:
+                    # Gemini is busy. Reading it again later is safe, since saved files are spotted as duplicates.
+                    store.release_intake_message(key)
+                    raise
+                problem = error.detail
+                break
+            (repeated if duplicate else added).append(document["id"])
+        if added:
+            status, detail = "added", f"Added {len(added)} document{'s' if len(added) != 1 else ''}."
+        elif repeated:
+            status, detail = "duplicate", "Already in Inkfold."
+        elif problem:
+            status, detail = "failed", problem
+        else:
+            status, detail = "skipped", "No PDF, PNG, JPG or text to read in this email."
+        if problem and added:
+            detail += f" {problem}"
+        store.finish_intake_message(
+            key, user_id=user["id"], **record, status=status, detail=detail, document_ids=added + repeated
+        )
+        return len(files)
+
+    def check_inbox():
+        """Read the oldest unread emails, up to a few documents' worth. Returns how many emails were handled."""
+        budget, handled = MAX_DOCUMENTS_PER_CHECK, 0
+        try:
+            with mailbox.session() as session:
+                for uid in session.unread(limit=20):
+                    used = read_email(session.fetch(uid), budget)
+                    if used is None:
+                        if budget < MAX_DOCUMENTS_PER_CHECK:
+                            break
+                        continue
+                    session.mark_read(uid)
+                    budget -= used
+                    handled += 1
+                    if budget <= 0:
+                        break
+        except (imaplib.IMAP4.error, OSError):
+            logger.exception("Could not read the intake inbox")
+            raise HTTPException(status_code=503, detail=INBOX_DOWN)
+        return handled
+
+    def intake_view(user):
+        if not intake:
+            return {"enabled": False}
+        token = store.intake_token(user["id"], new_token())
+        return {
+            "enabled": True,
+            "address": address_for(intake["inbox"], token),
+            "scheduled": bool(settings["intake_poll_secret"]),
+            "recent": [
+                {**row, "document_ids": list(row["document_ids"])} for row in store.recent_intake(user["id"])
+            ],
+        }
+
+    def need_intake():
+        if not intake:
+            raise HTTPException(status_code=404, detail="Email intake isn't turned on.")
+
+    @app.get("/api/intake")
+    def get_intake(user=Depends(current_user)):
+        return intake_view(user)
+
+    @app.post("/api/intake/address")
+    def new_intake_address(user=Depends(current_user)):
+        """A new address. The old one stops working at once."""
+        need_intake()
+        store.intake_token(user["id"], new_token(), replace=True)
+        return intake_view(user)
+
+    @app.post("/api/intake/check")
+    def check_intake(user=Depends(current_user)):
+        need_intake()
+        enforce_limit("intake_check", user["id"])
+        handled = check_inbox()
+        return {**intake_view(user), "handled": handled}
+
+    @app.post("/api/intake/poll")
+    def poll_intake(authorization: str = Header(default="")):
+        """Called on a schedule, so mail arrives without anyone pressing the button."""
+        secret = settings["intake_poll_secret"]
+        if not intake or not secret:
+            raise HTTPException(status_code=404, detail="Not found")
+        if not hmac.compare_digest(authorization.encode(), f"Bearer {secret}".encode()):
+            raise HTTPException(status_code=401, detail="Not signed in")
+        return {"handled": check_inbox()}
 
     @app.get("/api/documents")
     def list_documents(user=Depends(current_user)):

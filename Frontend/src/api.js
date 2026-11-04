@@ -74,6 +74,9 @@ export const api = {
   me: () => request('/me'),
   changePassword: (current_password, new_password) =>
     request('/me/password', { method: 'POST', json: { current_password, new_password } }),
+  intake: () => request('/intake'),
+  checkIntake: () => request('/intake/check', { method: 'POST' }),
+  newIntakeAddress: () => request('/intake/address', { method: 'POST' }),
   documents: () => request('/documents'),
   document: (id) => request(`/documents/${id}`),
   upload(file) {

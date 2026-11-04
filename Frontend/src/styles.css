@@ -207,6 +207,22 @@ input:disabled, textarea:disabled { background: var(--surface-2); color: var(--m
 .dropzone-title { font-weight: 600; }
 .dropzone-hint { color: var(--muted); font-size: 0.88rem; }
 .samples { color: var(--muted); font-size: 0.92rem; margin: 12px 0 28px; }
+.intake { padding: 20px 22px; margin: 0 0 28px; }
+.intake h2 { font-size: 1.1rem; margin: 0 0 4px; }
+.intake-lead { color: var(--ink-2); margin: 0 0 14px; font-size: 0.95rem; }
+.intake-address { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.intake-address code { flex: 1 1 260px; min-width: 0; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--rule); overflow-wrap: anywhere; user-select: all; }
+.intake-status { margin-top: 10px; }
+.intake-recent { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--rule); }
+.intake-recent li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: 0.9rem; }
+.intake-recent li:last-child { border-bottom: 0; }
+.intake-subject { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.intake-result { text-align: right; color: var(--ink-2); }
+.intake-result.ok { color: var(--ok); }
+.intake-result.warn { color: var(--warn); }
+.intake-result.error { color: var(--error); }
+.intake-result.muted { color: var(--muted); }
+.intake-when { grid-column: 1 / -1; color: var(--muted); font-size: 0.82rem; overflow-wrap: anywhere; }
 .empty { color: var(--muted); padding: 28px; text-align: center; border: 1px solid var(--rule); border-radius: var(--radius); }
 .doc-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); overflow: hidden; box-shadow: var(--shadow); }
 .doc-list li + li { border-top: 1px solid var(--rule); }
@@ -286,6 +302,9 @@ input:disabled, textarea:disabled { background: var(--surface-2); color: var(--m
   .group { padding: 4px 14px 12px; }
   .savebar { bottom: 8px; }
   .savebar > span:first-child { width: 100%; }
+  .intake-address .button { flex: 1 1 auto; }
+  .intake-recent li { grid-template-columns: 1fr; }
+  .intake-result { text-align: left; }
 }
 
 @media (prefers-reduced-motion: reduce) {

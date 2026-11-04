@@ -124,6 +124,12 @@ export default function Review() {
         <div>
           <h1>{document.title}</h1>
           <p className="doc-meta">{DOC_TYPES[document.doc_type]} · {document.filename}</p>
+          {document.source?.via === 'email' && (
+            <p className="doc-meta">
+              Emailed in by {document.source.from || 'an unknown sender'}
+              {document.source.subject && <>: &ldquo;{document.source.subject}&rdquo;</>}
+            </p>
+          )}
         </div>
         <button type="button" className="button subtle" onClick={remove}>Delete</button>
       </div>

@@ -1,4 +1,5 @@
 import json
+from contextlib import contextmanager
 from types import SimpleNamespace
 
 import httpx
@@ -38,7 +39,7 @@ def store(database_url):
     store = Store(database_url)
     store.init_schema()
     with psycopg.connect(database_url, autocommit=True) as db:
-        db.execute("TRUNCATE users, documents, sync_events, rate_limits, password_reset_tokens CASCADE")
+        db.execute("TRUNCATE users, documents, sync_events, rate_limits, password_reset_tokens, intake_messages CASCADE")
     yield store
     store.close()
 
@@ -108,6 +109,8 @@ def make_settings(database_url, **overrides):
         "app_url": "http://localhost:5180",
         "smtp": None,
         "google_client_id": "",
+        "intake": None,
+        "intake_poll_secret": "",
         "uploads_per_user_day": 10,
         "uploads_per_day": 100,
         "behind_proxy": False,
@@ -144,6 +147,37 @@ class FakeGoogle:
         return self.claims.get(credential, {"email": credential, "email_verified": True})
 
 
+class FakeInbox:
+    """An IMAP inbox in memory. `add` takes raw email bytes; `down` makes every session fail."""
+
+    def __init__(self):
+        self.messages = {}  # uid: [raw, read]
+        self.down = False
+
+    def add(self, raw):
+        uid = str(len(self.messages) + 1).encode()
+        self.messages[uid] = [raw, False]
+        return uid
+
+    def unread_count(self):
+        return sum(not read for _, read in self.messages.values())
+
+    @contextmanager
+    def session(self):
+        if self.down:
+            raise OSError("Connection refused")
+        yield self
+
+    def unread(self, limit):
+        return [uid for uid, (_, read) in self.messages.items() if not read][:limit]
+
+    def fetch(self, uid):
+        return self.messages[uid][0]
+
+    def mark_read(self, uid):
+        self.messages[uid][1] = True
+
+
 class FakeMailer:
     """Keeps the emails instead of sending them. Set `error` to make sending fail."""
 
@@ -166,7 +200,7 @@ def mailer():
 def build(store, gemini, services, database_url):
     """Builds a TestClient. Pass setting overrides, such as n8n_webhook_url, and send_email."""
 
-    def _build(send_email=None, verify_google=None, **overrides):
+    def _build(send_email=None, verify_google=None, mailbox=None, **overrides):
         app = create_app(
             make_settings(database_url, **overrides),
             store=store,
@@ -174,6 +208,7 @@ def build(store, gemini, services, database_url):
             http_client=httpx.Client(transport=httpx.MockTransport(services)),
             send_email=send_email,
             verify_google=verify_google or refuse_google,
+            mailbox=mailbox,
         )
         return TestClient(app)
 

@@ -20,7 +20,10 @@ RESET_TOKEN_LIFETIME = timedelta(minutes=15)
 # How long a request waits for the first database connection before giving up.
 POOL_OPEN_TIMEOUT = 10
 USER_COLUMNS = "id, email, is_demo, password_changed_at, password_hash IS NOT NULL AS has_password"
-DOCUMENT_COLUMNS = "id, user_id, filename, mime, size, sha256, doc_type, status, error, fields, crm, created_at, updated_at"
+DOCUMENT_COLUMNS = "id, user_id, filename, mime, size, sha256, doc_type, status, error, fields, crm, source, created_at, updated_at"
+# An email whose check never finished, say because the function timed out, is tried again after this long.
+INTAKE_STALE_AFTER = timedelta(minutes=10)
+INTAKE_HISTORY = timedelta(days=30)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -63,6 +66,19 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 );
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS intake_token TEXT UNIQUE;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS source JSONB;
+CREATE TABLE IF NOT EXISTS intake_messages (
+    key TEXT PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    sender TEXT NOT NULL DEFAULT '',
+    subject TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL,
+    detail TEXT NOT NULL DEFAULT '',
+    document_ids JSONB NOT NULL DEFAULT '[]',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS intake_messages_user_idx ON intake_messages (user_id, created_at DESC);
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     token_hash TEXT PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -241,6 +257,58 @@ class Store:
                 self._insert_document(db, user_id, **document)
         return user
 
+    # Email intake
+
+    def intake_token(self, user_id, new_token, replace=False):
+        """The account's intake token. `new_token` is used if it has none yet, or always with `replace`."""
+        with self._connect() as db:
+            row = db.execute(
+                "UPDATE users SET intake_token = CASE WHEN %(replace)s OR intake_token IS NULL THEN %(token)s "
+                "ELSE intake_token END WHERE id = %(id)s RETURNING intake_token",
+                {"replace": replace, "token": new_token, "id": user_id},
+            ).fetchone()
+        return row["intake_token"] if row else None
+
+    def user_by_intake_token(self, token):
+        with self._connect() as db:
+            return db.execute(f"SELECT {USER_COLUMNS} FROM users WHERE intake_token = %s", (token,)).fetchone()
+
+    def claim_intake_message(self, key):
+        """'claimed' to go ahead, 'done' if it was already handled, or 'busy' if another check has it."""
+        with self._connect() as db:
+            db.execute("DELETE FROM intake_messages WHERE created_at < %s", (datetime.now(timezone.utc) - INTAKE_HISTORY,))
+            claimed = db.execute(
+                "INSERT INTO intake_messages AS m (key, status) VALUES (%s, 'processing') "
+                "ON CONFLICT (key) DO UPDATE SET created_at = now() "
+                "WHERE m.status = 'processing' AND m.created_at < %s RETURNING key",
+                (key, datetime.now(timezone.utc) - INTAKE_STALE_AFTER),
+            ).fetchone()
+            if claimed:
+                return "claimed"
+            row = db.execute("SELECT status FROM intake_messages WHERE key = %s", (key,)).fetchone()
+        return "busy" if row and row["status"] == "processing" else "done"
+
+    def finish_intake_message(self, key, *, user_id, sender, subject, status, detail, document_ids):
+        with self._connect() as db:
+            db.execute(
+                "UPDATE intake_messages SET user_id = %s, sender = %s, subject = %s, status = %s, detail = %s, "
+                "document_ids = %s WHERE key = %s",
+                (user_id, sender, subject, status, detail, Jsonb([str(i) for i in document_ids]), key),
+            )
+
+    def release_intake_message(self, key):
+        """Let a later check take this email, because this one stopped before reaching it."""
+        with self._connect() as db:
+            db.execute("DELETE FROM intake_messages WHERE key = %s AND status = 'processing'", (key,))
+
+    def recent_intake(self, user_id, limit=5):
+        with self._connect() as db:
+            return db.execute(
+                "SELECT sender, subject, status, detail, document_ids, created_at FROM intake_messages "
+                "WHERE user_id = %s AND status <> 'processing' ORDER BY created_at DESC LIMIT %s",
+                (user_id, limit),
+            ).fetchall()
+
     # Rate limits
 
     def hit_rate_limit(self, key, limit, window):
@@ -259,12 +327,13 @@ class Store:
     # Documents
 
     @staticmethod
-    def _insert_document(db, user_id, filename, mime, size, sha256, doc_type, status, fields, error=None):
+    def _insert_document(db, user_id, filename, mime, size, sha256, doc_type, status, fields, error=None, source=None):
         return db.execute(
-            f"INSERT INTO documents (id, user_id, filename, mime, size, sha256, doc_type, status, error, fields) "
-            f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+            f"INSERT INTO documents (id, user_id, filename, mime, size, sha256, doc_type, status, error, fields, source) "
+            f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
             f"ON CONFLICT (user_id, sha256) DO NOTHING RETURNING {DOCUMENT_COLUMNS}",
-            (uuid.uuid4(), user_id, filename, mime, size, sha256, doc_type, status, error, Jsonb(fields)),
+            (uuid.uuid4(), user_id, filename, mime, size, sha256, doc_type, status, error, Jsonb(fields),
+             Jsonb(source) if source else None),
         ).fetchone()
 
     def add_document(self, user_id, **document):

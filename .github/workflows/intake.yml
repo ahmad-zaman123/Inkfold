@@ -1,0 +1,39 @@
+name: Check the intake inbox
+
+# Reads emailed documents without anyone pressing "Check inbox now".
+# Needs the INTAKE_POLL_SECRET secret and the INKFOLD_API_URL variable; it does nothing until both are set.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: intake-poll
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    name: Check inbox
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check inbox
+        env:
+          API_URL: ${{ vars.INKFOLD_API_URL }}
+          SECRET: ${{ secrets.INTAKE_POLL_SECRET }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$SECRET" ]; then
+            echo "Email intake isn't set up for this repository, so there's nothing to check."
+            exit 0
+          fi
+          status=$(curl -sS -o response.json -w "%{http_code}" --max-time 300 -X POST \
+            -H "Authorization: Bearer $SECRET" "${API_URL%/}/api/intake/poll")
+          cat response.json; echo
+          case "$status" in
+            200) ;;
+            # The inbox or Gemini was busy. The emails stay unread, so the next run picks them up.
+            503) echo "::warning::The inbox or the AI service was busy. Trying again on the next run." ;;
+            *) echo "::error::The intake check answered $status."; exit 1 ;;
+          esac

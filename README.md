@@ -2,7 +2,7 @@
 
 <p align="center">
   <b>Business documents into HubSpot, checked by a person first.</b><br/>
-  Upload an invoice, a business card or a lead form. Inkfold reads it, cleans up the fields, shows you what it's unsure about and saves the contact, company, deal and note to HubSpot, directly or through an n8n workflow.
+  Upload or email in an invoice, a business card or a lead form. Inkfold reads it, cleans up the fields, shows you what it's unsure about and saves the contact, company, deal and note to HubSpot, directly or through an n8n workflow.
 </p>
 
 <p align="center">
@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
   <img src="https://img.shields.io/badge/HubSpot-CRM%20API-FF7A59?logo=hubspot&logoColor=white&style=flat-square" alt="HubSpot" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-177%20passing-2ea44f?style=flat-square" alt="177 tests passing" />
+  <img src="https://img.shields.io/badge/tests-205%20passing-2ea44f?style=flat-square" alt="205 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -87,7 +87,7 @@ To send records through n8n instead of straight to HubSpot, see [`n8n/README.md`
 **4. Tests**
 
 ```bash
-cd Backend && .venv/bin/python -m pytest      # 167 tests, real Postgres, fake Gemini and HubSpot
+cd Backend && .venv/bin/python -m pytest      # 195 tests, real Postgres, fake Gemini and HubSpot
 node --test n8n/test/*.test.mjs                # 10 tests for the n8n Code nodes
 Backend/.venv/bin/python n8n/test/e2e.py       # API + n8n + fake HubSpot round trip
 ```
@@ -114,7 +114,10 @@ No test calls Gemini or HubSpot, so none of them need keys.
 | `SMTP_USER`, `SMTP_PASSWORD` | for reset | Turn on password reset by email. For Gmail, use an [app password](https://myaccount.google.com/apppasswords). Without them, "Forgot password?" is hidden. |
 | `SMTP_HOST`, `SMTP_PORT`, `EMAIL_FROM` | no | Default to Gmail (`smtp.gmail.com`, `587`) and the `SMTP_USER` address. |
 | `GOOGLE_CLIENT_ID` | for Google | A Google OAuth web client ID. Turns on Continue with Google. Set the same value as `VITE_GOOGLE_CLIENT_ID` on the frontend. |
-| `UPLOADS_PER_USER_DAY`, `UPLOADS_PER_DAY` | no | Upload limits. Default 10 per user and 100 in total per day. |
+| `UPLOADS_PER_USER_DAY`, `UPLOADS_PER_DAY` | no | Upload limits, which emailed documents count against too. Default 10 per user and 100 in total per day. |
+| `INTAKE_EMAIL`, `INTAKE_PASSWORD` | for email in | The inbox that forwarded documents arrive in, and its password. For Gmail, use a new account and an [app password](https://myaccount.google.com/apppasswords). Without them, email intake is hidden. |
+| `INTAKE_IMAP_HOST` | no | Defaults to `imap.gmail.com`. Any IMAP inbox that delivers `name+anything@` addresses works. |
+| `INTAKE_POLL_SECRET` | no | Lets the scheduled job check the inbox. Without it, mail is read when someone presses **Check inbox now**. |
 
 Frontend (`Frontend/.env`): `VITE_API_URL` is the deployed backend's address, left empty locally because Vite proxies `/api`. `VITE_GOOGLE_CLIENT_ID` shows the Google button; add the site's address to the client's **Authorized JavaScript origins** in Google Cloud.
 
@@ -145,7 +148,7 @@ Demo accounts are deleted after two days. Each address can open 10 demos an hour
 ## 🧩 How it works
 
 ```
- upload ──▶ type check by file contents ──▶ duplicate check (sha256)
+ upload or email ──▶ type check by file contents ──▶ duplicate check (sha256)
                                                    │
                                    Gemini, structured JSON output
                                                    │
@@ -186,6 +189,9 @@ Email and password or Continue with Google, with scrypt hashes and 8-hour sessio
 </td>
 <td width="50%" valign="top">
 
+### 📬 Email them in
+Every account gets a private address such as `inkfold.intake+k3x9q2@gmail.com`. Forwarded attachments are read, and an email with no attachment is read from its text, which suits lead emails. One inbox serves everyone, and the part after the `+` says whose mail it is. Each email is read once, even when two checks run together, and a scheduled GitHub Action checks every 10 minutes.
+
 ### 🔀 Direct or through n8n
 The same HubSpot calls run either in the API or in an n8n workflow you can extend with your own steps. The workflow ships as JSON with its Code nodes kept as tested source files.
 
@@ -214,6 +220,10 @@ Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timest
 | `POST` | `/api/password/forgot`, `/api/password/reset` | Email a reset link, then use it to set a new password. |
 | `POST` | `/api/me/password` | Change the password. Signs out every other session and returns a new token. |
 | `POST` | `/api/documents` | Upload a file (multipart `file`). Returns the extracted document. |
+| `GET` | `/api/intake` | Your intake address and what your recent emails turned into. |
+| `POST` | `/api/intake/check` | Read new emails now. |
+| `POST` | `/api/intake/address` | Replace your intake address. The old one stops working. |
+| `POST` | `/api/intake/poll` | The scheduled check, with `Authorization: Bearer INTAKE_POLL_SECRET`. |
 | `GET` | `/api/documents`, `/api/documents/{id}` | List documents, or one with its fields, issues and sync history. |
 | `PATCH` | `/api/documents/{id}/fields` | Save edits, as `{"fields": {"contact.phone": "+1 617 555 0123"}}`. |
 | `POST` | `/api/documents/{id}/sync` | Send to HubSpot. `422` with the missing fields if it isn't ready. |
@@ -226,6 +236,8 @@ Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timest
 - Scanned PDFs work when Gemini can read them; there's no separate OCR step.
 - Deleting a document in Inkfold leaves its HubSpot records in place.
 - Deals use HubSpot's default pipeline.
+- One check reads up to 5 documents, so it stays inside Vercel's time limit. Anything more waits for the next check.
+- GitHub runs scheduled jobs on a best-effort basis, so "every 10 minutes" can stretch at busy times. It also pauses them after 60 days without a commit.
 
 ## 🛠️ Tech stack
 
@@ -251,19 +263,20 @@ Inkfold/
 │   │   ├── demo_data.py    the demo's pre-read sample documents
 │   │   ├── extract.py      Gemini extraction with model fallback
 │   │   ├── mailer.py       password reset emails over SMTP
+│   │   ├── intake.py       email intake: addresses, parsing and IMAP
 │   │   ├── main.py         API routes, auth, uploads, rate limits
 │   │   ├── normalize.py    field cleaning and cross-checks
 │   │   ├── schema.py       the fields Inkfold extracts
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              167 tests against a real Postgres
+│   ├── tests/              195 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json
 ├── Frontend/
 │   ├── src/
-│   │   ├── components/     upload, field rows, line items, HubSpot panel, Google button
+│   │   ├── components/     upload, email intake, field rows, line items, HubSpot panel, Google button
 │   │   ├── pages/          landing, sign-in, password reset, account, documents, review
 │   │   ├── api.js          API client
 │   │   └── styles.css
@@ -281,6 +294,7 @@ Inkfold/
 ## ☁️ Deployment & CI
 
 - **Vercel**, as two projects from this repo: `Backend` (serverless Python) and `Frontend` (Vite). Postgres is on Neon. Set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `HUBSPOT_TOKEN`, `HUBSPOT_PORTAL_ID` and `CORS_ALLOWED_ORIGINS` on the backend, and `VITE_API_URL` on the frontend. Create the tables once with `scripts/init_db.py`.
+- **Email intake** (`intake.yml`) calls `/api/intake/poll` every 10 minutes. Set the `INKFOLD_API_URL` repository variable and the `INTAKE_POLL_SECRET` secret, the same value as on the backend. Until both are set, it does nothing.
 - **CI** (`ci.yml`) runs the backend tests, the n8n Code node tests, a check that the workflow JSON matches its source files, and the frontend build on every push and pull request.
 
 ## 📄 License

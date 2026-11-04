@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
+import EmailIntake from '../components/EmailIntake.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import Upload from '../components/Upload.jsx'
 import { DOC_TYPES, formatWhen } from '../labels.js'
@@ -15,12 +16,14 @@ export default function Documents({ user }) {
   const [documents, setDocuments] = useState(null)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const load = useCallback(() => {
     api
       .documents()
       .then((data) => setDocuments(data.documents))
       .catch((err) => setError(err.message))
   }, [])
+
+  useEffect(load, [load])
 
   return (
     <div className="page">
@@ -39,6 +42,7 @@ export default function Documents({ user }) {
           </span>
         ))}
       </p>
+      <EmailIntake onNewDocuments={load} />
 
       {error && <p className="banner error" role="alert">{error}</p>}
       {documents === null && !error && <p className="muted" aria-busy="true">Loading documents...</p>}
@@ -50,7 +54,8 @@ export default function Documents({ user }) {
               <Link to={`/documents/${document.id}`} className="doc-row">
                 <span className="doc-title">{document.title}</span>
                 <span className="doc-meta">
-                  {DOC_TYPES[document.doc_type]} · {document.filename} · {formatWhen(document.created_at)}
+                  {DOC_TYPES[document.doc_type]} · {document.filename}
+                  {document.source?.via === 'email' && ' · emailed in'} · {formatWhen(document.created_at)}
                 </span>
                 <StatusPill status={document.status} />
               </Link>
