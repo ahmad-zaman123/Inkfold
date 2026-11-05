@@ -66,8 +66,7 @@ body {
   font: 16px/1.55 var(--font);
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3 { line-height: 1.2; margin: 0; letter-spacing: -0.015em; font-weight: 600; }
-h1 { font-weight: 500; }
+h1, h2, h3 { line-height: 1.2; margin: 0; letter-spacing: -0.015em; }
 a { color: var(--accent); text-underline-offset: 3px; }
 button, input, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
@@ -83,7 +82,7 @@ button, input, textarea { font: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding: 14px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--rule); background: var(--surface);
 }
-.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 600; font-size: 1.1rem; text-decoration: none; letter-spacing: -0.01em; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 700; font-size: 1.1rem; text-decoration: none; letter-spacing: -0.01em; }
 .mark { width: 28px; height: 28px; }
 .mark rect { fill: var(--accent); }
 .mark path { stroke: var(--accent-ink); stroke-width: 2.6; stroke-linecap: round; fill: none; }
@@ -147,8 +146,8 @@ button, input, textarea { font: inherit; color: inherit; }
 /* Landing */
 .landing { width: min(1160px, 100%); margin: 0 auto; padding: clamp(28px, 6vw, 72px) clamp(16px, 4vw, 40px) 40px; }
 .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: center; }
-.eyebrow { color: var(--accent); font-weight: 600; font-size: 0.95rem; margin: 0 0 12px; }
-.hero h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); letter-spacing: -0.025em; line-height: 1.08; text-wrap: balance; }
+.eyebrow { color: var(--accent); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 14px; }
+.hero h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); letter-spacing: -0.03em; line-height: 1.06; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .fineprint { color: var(--muted); font-size: 0.9rem; margin: 14px 0 0; }
 .example { margin: 0; display: grid; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
@@ -294,7 +293,7 @@ input:disabled, textarea:disabled { background: var(--surface-2); color: var(--m
 .sync-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .sync-head h2 { font-size: 1.05rem; }
 .crm, .timeline { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
-.crm-title { margin: 0 0 8px; font-size: 0.9rem; font-weight: 600; color: var(--ink-2); }
+.crm-title { margin: 0 0 8px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .crm dl { margin: 0; display: grid; gap: 4px; }
 .crm dl div { display: flex; justify-content: space-between; font-size: 0.92rem; }
 .crm dt { color: var(--ink-2); }
