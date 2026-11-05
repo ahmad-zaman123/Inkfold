@@ -35,13 +35,6 @@ https://github.com/user-attachments/assets/79d81862-3c51-41e1-999e-c491c6d6389c
   <a href="#-limits">Limits</a>
 </p>
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/review-dark.png" />
-    <img src="docs/screenshots/review.png" alt="The review screen for a lead form: extracted fields with where each came from, a phone number flagged for a missing country code, and the Send to HubSpot panel" width="860" />
-  </picture>
-</p>
-
 ---
 
 ## 🧭 What is Inkfold?
