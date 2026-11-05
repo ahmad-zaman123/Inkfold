@@ -148,7 +148,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .landing { width: min(1160px, 100%); margin: 0 auto; padding: clamp(28px, 6vw, 72px) clamp(16px, 4vw, 40px) 40px; }
 .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: center; }
 .eyebrow { color: var(--accent); font-weight: 600; font-size: 0.95rem; margin: 0 0 12px; }
-.hero h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); letter-spacing: -0.025em; line-height: 1.08; }
+.hero h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); letter-spacing: -0.025em; line-height: 1.08; text-wrap: balance; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .fineprint { color: var(--muted); font-size: 0.9rem; margin: 14px 0 0; }
 .example { margin: 0; display: grid; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
