@@ -98,7 +98,9 @@ class GoogleSheets:
         """`service_account` is the key file's JSON, as text or already parsed."""
         info = json.loads(service_account) if isinstance(service_account, str) else service_account
         self.email = info["client_email"]
-        self.private_key = info["private_key"]
+        # A key pasted into a dashboard sometimes ends up with "\\n" where the file had line breaks.
+        key = info["private_key"]
+        self.private_key = key.replace("\\n", "\n") if "\n" not in key.strip() else key
         self.token_url = token_url or info.get("token_uri") or TOKEN_URL
         self.spreadsheet_id = spreadsheet_id
         self.tab = tab
@@ -111,11 +113,14 @@ class GoogleSheets:
         if self._token and time.time() < self._token_expires - 60:
             return self._token
         now = int(time.time())
-        assertion = jwt.encode(
-            {"iss": self.email, "scope": SCOPE, "aud": self.token_url, "iat": now, "exp": now + 3600},
-            self.private_key,
-            algorithm="RS256",
-        )
+        try:
+            assertion = jwt.encode(
+                {"iss": self.email, "scope": SCOPE, "aud": self.token_url, "iat": now, "exp": now + 3600},
+                self.private_key,
+                algorithm="RS256",
+            )
+        except (jwt.PyJWTError, ValueError, TypeError):
+            raise CrmError("The private key in GOOGLE_SERVICE_ACCOUNT_JSON can't be read. Paste the whole JSON file again.") from None
         try:
             response = self.client.post(
                 self.token_url,

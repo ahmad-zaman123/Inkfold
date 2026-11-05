@@ -801,9 +801,15 @@ def create_app(
                 crm = pipedrive_client().push(record, existing=existing)
             else:
                 crm = sheets_client().push(document, fields)
-        except CrmError as error:
-            store.add_sync_event(document["id"], channel, "failed", error.message, actor=user["email"])
-            store.update_document(document["id"], status="sync_failed", error=error.message)
+        except Exception as error:
+            # A surprise is logged and shown as a failed send, so the document never stays stuck at "Sending".
+            if isinstance(error, CrmError):
+                message = error.message
+            else:
+                logger.exception("Sending document %s to %s failed", document["id"], destination)
+                message = f"Something went wrong sending to {DESTINATIONS[destination]}. Please try again."
+            store.add_sync_event(document["id"], channel, "failed", message, actor=user["email"])
+            store.update_document(document["id"], status="sync_failed", error=message)
         else:
             crm = {**crm, "destination": destination}
             store.add_sync_event(document["id"], channel, "synced", crm_summary(crm, destination), actor=user["email"])

@@ -16,7 +16,7 @@
   <img src="https://img.shields.io/badge/Google%20Sheets-API%20v4-34A853?logo=googlesheets&logoColor=white&style=flat-square" alt="Google Sheets" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
   <img src="https://img.shields.io/badge/accuracy-312%2F312%20fields-2ea44f?style=flat-square" alt="312 of 312 fields read correctly" />
-  <img src="https://img.shields.io/badge/tests-256%20passing-2ea44f?style=flat-square" alt="256 tests passing" />
+  <img src="https://img.shields.io/badge/tests-259%20passing-2ea44f?style=flat-square" alt="259 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -94,7 +94,7 @@ To send records through n8n instead of straight to HubSpot, see [`n8n/README.md`
 **4. Tests**
 
 ```bash
-cd Backend && .venv/bin/python -m pytest      # 246 tests, real Postgres, fake Gemini, HubSpot, Pipedrive and Sheets
+cd Backend && .venv/bin/python -m pytest      # 249 tests, real Postgres, fake Gemini, HubSpot, Pipedrive and Sheets
 node --test n8n/test/*.test.mjs                # 10 tests for the n8n Code nodes
 Backend/.venv/bin/python n8n/test/e2e.py       # API + n8n + fake HubSpot round trip
 ```
@@ -316,7 +316,7 @@ Inkfold/
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              246 tests against a real Postgres
+│   ├── tests/              249 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json

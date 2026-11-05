@@ -245,3 +245,41 @@ def test_no_destination_at_all(make):
     assert document["can_sync"] is False and document["destination"] is None
     response = client.post(f"/api/documents/{document['id']}/sync", headers=auth)
     assert response.status_code == 503 and "Nothing to send to" in response.json()["detail"]
+
+
+def test_a_key_pasted_with_escaped_line_breaks_still_works(make, account, sheets):
+    import json
+
+    info = json.loads(account)
+    info["private_key"] = info["private_key"].replace("\n", "\\n")
+    client = make(sheets={"service_account": json.dumps(info), "spreadsheet_id": "sheet-1", "tab": "Inkfold"})
+    auth = sign_in(client)
+    choose(client, auth, "sheets")
+    assert send(client, auth, upload(client, auth))["status"] == "synced"
+
+
+def test_an_unreadable_private_key_is_reported_not_a_crash(make, account):
+    import json
+
+    info = {**json.loads(account), "private_key": "-----BEGIN PRIVATE KEY-----\nnot a key\n-----END PRIVATE KEY-----\n"}
+    client = make(sheets={"service_account": json.dumps(info), "spreadsheet_id": "sheet-1", "tab": "Inkfold"})
+    auth = sign_in(client)
+    choose(client, auth, "sheets")
+    sent = send(client, auth, upload(client, auth))
+    assert sent["status"] == "sync_failed" and "private key" in sent["error"]
+
+
+def test_a_surprise_error_marks_the_send_failed_instead_of_leaving_it_sending(client, monkeypatch):
+    from app.sheets import GoogleSheets
+
+    def broken(self, document, fields):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(GoogleSheets, "push", broken)
+    auth = sign_in(client)
+    choose(client, auth, "sheets")
+    document = upload(client, auth)
+    response = client.post(f"/api/documents/{document['id']}/sync", headers=auth)
+    assert response.status_code == 200
+    assert response.json()["status"] == "sync_failed" and "Google Sheets" in response.json()["error"]
+    assert "boom" not in response.json()["error"]
