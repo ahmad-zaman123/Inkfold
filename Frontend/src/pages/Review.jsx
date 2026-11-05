@@ -5,7 +5,7 @@ import FieldRow from '../components/FieldRow.jsx'
 import LineItems from '../components/LineItems.jsx'
 import Original from '../components/Original.jsx'
 import SyncPanel from '../components/SyncPanel.jsx'
-import { DOC_TYPES, GROUPS } from '../labels.js'
+import { DOC_TYPES, GROUPS, inTeam, who } from '../labels.js'
 import { marksFor } from '../highlight.js'
 
 const POLL_MS = 2000
@@ -30,12 +30,12 @@ function changedKeys(document, values) {
 }
 
 // Keyed by id, so moving to the next document starts with a clean page.
-export default function ReviewPage() {
+export default function ReviewPage({ user }) {
   const { id } = useParams()
-  return <Review key={id} id={id} />
+  return <Review key={id} id={id} user={user} />
 }
 
-function Review({ id }) {
+function Review({ id, user }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [document, setDocument] = useState(null)
@@ -43,6 +43,8 @@ function Review({ id }) {
   const [loadError, setLoadError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  // A teammate saved first, so these edits were made on an older version.
+  const [conflict, setConflict] = useState(false)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [notice, setNotice] = useState(location.state?.duplicate ? 'You uploaded this file before, so here is the earlier copy.' : '')
@@ -136,13 +138,30 @@ function Review({ id }) {
   async function save() {
     setSaving(true)
     setSaveError('')
+    setConflict(false)
     setNotice('')
     try {
-      show(await api.saveFields(id, Object.fromEntries(dirtyKeys.map((key) => [key, values[key]]))))
+      show(await api.saveFields(id, Object.fromEntries(dirtyKeys.map((key) => [key, values[key]])), document.updated_at))
     } catch (err) {
       setSaveError(err.message)
+      setConflict(err.status === 409 && err.message.startsWith('Someone else'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Takes the teammate's saved version and puts this reviewer's unsaved changes back on top, to look over and save.
+  async function loadLatest() {
+    try {
+      const latest = await api.document(id)
+      const mine = Object.fromEntries(dirtyKeys.map((key) => [key, values[key]]))
+      setDocument(latest)
+      setValues({ ...valuesOf(latest), ...mine })
+      setConflict(false)
+      setSaveError('')
+      setNotice("Loaded the latest version. Your unsaved changes are still in the form, so check them and save.")
+    } catch (err) {
+      setSaveError(err.message)
     }
   }
 
@@ -181,7 +200,10 @@ function Review({ id }) {
       <div className="review-head">
         <div>
           <h1>{document.title}</h1>
-          <p className="doc-meta">{DOC_TYPES[document.doc_type]} · {document.filename}</p>
+          <p className="doc-meta">
+            {DOC_TYPES[document.doc_type]} · {document.filename}
+            {inTeam(user) && document.added_by && ` · added by ${who(document.added_by, user)}`}
+          </p>
           {document.source?.via === 'email' && (
             <p className="doc-meta">
               Emailed in by {document.source.from || 'an unknown sender'}
@@ -218,7 +240,7 @@ function Review({ id }) {
                   <LineItems key={key} field={document.fields[key]} items={values[key]} disabled={locked}
                     onChange={(items) => setValues({ ...values, [key]: items.length ? items : null })} />
                 ) : (
-                  <FieldRow key={key} name={key} field={document.fields[key]} value={values[key]} disabled={locked}
+                  <FieldRow key={key} name={key} field={document.fields[key]} value={values[key]} disabled={locked} user={user}
                     onChange={(value) => setValues({ ...values, [key]: value })} />
                 ),
               )}
@@ -226,7 +248,12 @@ function Review({ id }) {
           ))}
           <div className={`savebar${dirty ? ' visible' : ''}`} aria-hidden={!dirty}>
             <span>{dirtyKeys.length === 1 ? '1 unsaved change' : `${dirtyKeys.length} unsaved changes`}</span>
-            {saveError && <span className="savebar-error" role="alert">{saveError}</span>}
+            {saveError && (
+              <span className="savebar-error" role="alert">
+                {saveError}
+                {conflict && <> <button type="button" className="link-button" onClick={loadLatest}>Load their version</button></>}
+              </span>
+            )}
             <button type="button" className="button subtle" onClick={() => setValues(valuesOf(document))} disabled={saving || !dirty} tabIndex={dirty ? 0 : -1}>
               Discard
             </button>
@@ -235,7 +262,7 @@ function Review({ id }) {
             </button>
           </div>
         </form>
-        <SyncPanel document={document} matches={dirty ? null : matches} dirty={dirty} sending={sending} error={sendError} onSend={send} />
+        <SyncPanel document={document} user={user} matches={dirty ? null : matches} dirty={dirty} sending={sending} error={sendError} onSend={send} />
       </div>
     </div>
   )

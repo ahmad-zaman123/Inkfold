@@ -63,3 +63,17 @@ export function formatDay(iso) {
 export function formatWhen(iso) {
   return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
+
+// "you" for the signed-in person, otherwise their email, for saying who added, edited or sent something.
+export function who(email, me) {
+  return email && me && email === me.email ? 'you' : email
+}
+
+// Only worth saying who did what once more than one person shares the documents.
+export function inTeam(user) {
+  return (user?.team?.size ?? 1) > 1
+}
+
+export function teamName(name) {
+  return name || 'your team'
+}

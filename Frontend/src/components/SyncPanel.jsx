@@ -1,4 +1,4 @@
-import { formatDay, formatWhen } from '../labels.js'
+import { formatDay, formatWhen, inTeam, who } from '../labels.js'
 import StatusPill from './StatusPill.jsx'
 
 const CHANNELS = { direct: 'HubSpot', n8n: 'n8n workflow' }
@@ -56,7 +56,7 @@ function AlreadyThere({ matches }) {
   )
 }
 
-export default function SyncPanel({ document, matches, dirty, sending, error, onSend }) {
+export default function SyncPanel({ document, user, matches, dirty, sending, error, onSend }) {
   const reason = blockedReason(document, dirty)
   const duplicateDeal = matches?.available && matches.deal && !matches.deal.own
   const crm = document.crm
@@ -107,7 +107,10 @@ export default function SyncPanel({ document, matches, dirty, sending, error, on
             {[...document.sync_events].reverse().map((event) => (
               <li key={event.id} className={`event event-${event.status}`}>
                 <span className="event-when">{formatWhen(event.created_at)}</span>
-                <span className="event-what">{EVENT_LABELS[event.status] || event.status} · {CHANNELS[event.channel] || event.channel}</span>
+                <span className="event-what">
+                  {EVENT_LABELS[event.status] || event.status} · {CHANNELS[event.channel] || event.channel}
+                  {inTeam(user) && event.actor && <span className="event-who"> · by {who(event.actor, user)}</span>}
+                </span>
                 {event.detail && <span className="event-detail">{event.detail}</span>}
               </li>
             ))}

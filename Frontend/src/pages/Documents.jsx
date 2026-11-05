@@ -4,7 +4,7 @@ import { api } from '../api.js'
 import EmailIntake from '../components/EmailIntake.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import Upload from '../components/Upload.jsx'
-import { DOC_TYPES, formatWhen } from '../labels.js'
+import { DOC_TYPES, formatWhen, inTeam, who } from '../labels.js'
 
 const SAMPLES = [
   ['/samples/invoice.pdf', 'Invoice'],
@@ -56,6 +56,7 @@ export default function Documents({ user }) {
                 <span className="doc-meta">
                   {DOC_TYPES[document.doc_type]} · {document.filename}
                   {document.source?.via === 'email' && ' · emailed in'} · {formatWhen(document.created_at)}
+                  {inTeam(user) && document.added_by && ` · added by ${who(document.added_by, user)}`}
                 </span>
                 <StatusPill status={document.status} />
               </Link>

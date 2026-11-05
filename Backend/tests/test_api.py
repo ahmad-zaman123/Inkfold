@@ -492,7 +492,7 @@ def test_edits_are_checked_and_marked(client, auth):
         headers=auth,
     ).json()
     assert edited["fields"]["contact.email"]["issues"] == ["This doesn't look like a valid email address."]
-    assert edited["fields"]["company.name"] == {"value": "Kestrel Logistics Ltd", "confidence": 1.0, "source": "Edited by you", "issues": [], "edited": True}
+    assert edited["fields"]["company.name"] == {"value": "Kestrel Logistics Ltd", "confidence": 1.0, "source": "Edited in Inkfold", "issues": [], "edited": True, "edited_by": "sara@example.com"}
     assert edited["missing"] == ["contact.email"] and edited["can_sync"] is False
 
 

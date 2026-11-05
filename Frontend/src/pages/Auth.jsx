@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { api } from '../api.js'
 import GoogleButton from '../components/GoogleButton.jsx'
 
 export default function Auth({ mode, onSignedIn }) {
   const registering = mode === 'register'
-  const [email, setEmail] = useState('')
+  // An invite link sends people here with where to go next and the email it's for.
+  const { search } = useLocation()
+  const [email, setEmail] = useState(() => new URLSearchParams(search).get('email') || '')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -75,9 +77,9 @@ export default function Auth({ mode, onSignedIn }) {
         </button>
         <p className="switch">
           {registering ? (
-            <>Already have an account? <Link to="/login">Sign in</Link></>
+            <>Already have an account? <Link to={`/login${search}`}>Sign in</Link></>
           ) : (
-            <>New here? <Link to="/register">Create an account</Link> or try the demo from the <Link to="/">home page</Link>.</>
+            <>New here? <Link to={`/register${search}`}>Create an account</Link> or try the demo from the <Link to="/">home page</Link>.</>
           )}
         </p>
       </form>

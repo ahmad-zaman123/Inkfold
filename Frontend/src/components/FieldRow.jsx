@@ -1,13 +1,16 @@
-import { FIELD_LABELS, LOW_CONFIDENCE, PLACEHOLDERS } from '../labels.js'
+import { FIELD_LABELS, LOW_CONFIDENCE, PLACEHOLDERS, inTeam, who } from '../labels.js'
 
-function Confidence({ field }) {
-  if (field.edited) return <span className="badge badge-edited">Edited</span>
+function Confidence({ field, user }) {
+  if (field.edited) {
+    const by = inTeam(user) && field.edited_by ? ` by ${who(field.edited_by, user)}` : ''
+    return <span className="badge badge-edited">Edited{by}</span>
+  }
   if (field.value === null) return null
   if (field.issues.length || field.confidence < LOW_CONFIDENCE) return <span className="badge badge-warn">Check this</span>
   return <span className="badge">{Math.round(field.confidence * 100)}% sure</span>
 }
 
-export default function FieldRow({ name, field, value, onChange, disabled }) {
+export default function FieldRow({ name, field, value, onChange, disabled, user }) {
   const id = `field-${name.replace('.', '-')}`
   const notes = name === 'notes'
   const describedBy = [field.source && !field.edited && `${id}-source`, field.issues.length && `${id}-issues`].filter(Boolean).join(' ')
@@ -24,7 +27,7 @@ export default function FieldRow({ name, field, value, onChange, disabled }) {
     <div className={`field-row${field.issues.length ? ' has-issue' : ''}`} data-field={name}>
       <div className="field-top">
         <label htmlFor={id} className="field-label">{FIELD_LABELS[name]}</label>
-        <Confidence field={field} />
+        <Confidence field={field} user={user} />
       </div>
       {notes ? <textarea rows={3} {...props} /> : <input type={name === 'contact.email' ? 'email' : 'text'} {...props} />}
       {field.source && !field.edited && (

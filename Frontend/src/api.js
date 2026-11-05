@@ -85,9 +85,18 @@ export const api = {
     form.append('file', file)
     return request('/documents', { method: 'POST', form })
   },
-  saveFields: (id, fields) => request(`/documents/${id}/fields`, { method: 'PATCH', json: { fields } }),
+  saveFields: (id, fields, base_updated_at) =>
+    request(`/documents/${id}/fields`, { method: 'PATCH', json: { fields, base_updated_at } }),
   matches: (id) => request(`/documents/${id}/matches`),
   file: (id) => request(`/documents/${id}/file`, { blob: true }),
   sync: (id) => request(`/documents/${id}/sync`, { method: 'POST' }),
   remove: (id) => request(`/documents/${id}`, { method: 'DELETE' }),
+  team: () => request('/team'),
+  renameTeam: (name) => request('/team', { method: 'PATCH', json: { name } }),
+  invite: (email) => request('/team/invites', { method: 'POST', json: { email } }),
+  cancelInvite: (id) => request(`/team/invites/${id}`, { method: 'DELETE' }),
+  removeMember: (id) => request(`/team/members/${id}`, { method: 'DELETE' }),
+  leaveTeam: () => request('/team/leave', { method: 'POST' }),
+  inviteInfo: (token) => request(`/invites/${encodeURIComponent(token)}`),
+  acceptInvite: (token) => request(`/invites/${encodeURIComponent(token)}/accept`, { method: 'POST' }),
 }

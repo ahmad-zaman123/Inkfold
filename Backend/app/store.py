@@ -17,10 +17,19 @@ DEMO_LIFETIME = timedelta(days=2)
 SYNC_STALE_AFTER = timedelta(minutes=10)
 # Short, because anyone who sees the link in the inbox can use it.
 RESET_TOKEN_LIFETIME = timedelta(minutes=15)
+# Long enough for a teammate to get round to it, short enough that a forgotten link stops working.
+INVITE_LIFETIME = timedelta(days=7)
 # How long a request waits for the first database connection before giving up.
 POOL_OPEN_TIMEOUT = 10
-USER_COLUMNS = "id, email, is_demo, password_changed_at, password_hash IS NOT NULL AS has_password"
-DOCUMENT_COLUMNS = "id, user_id, filename, mime, size, sha256, doc_type, status, error, fields, crm, source, created_at, updated_at"
+USER_COLUMNS = (
+    "id, email, is_demo, password_changed_at, password_hash IS NOT NULL AS has_password, team_id, team_role, "
+    "(SELECT count(*) FROM users m WHERE m.team_id = users.team_id) AS team_size"
+)
+DOCUMENT_COLUMNS = (
+    "id, user_id, team_id, filename, mime, size, sha256, doc_type, status, error, fields, crm, source, created_at, updated_at, "
+    "(SELECT email FROM users WHERE users.id = documents.user_id) AS added_by"
+)
+MEMBER_COLUMNS = "id, email, team_role"
 # An email whose check never finished, say because the function timed out, is tried again after this long.
 INTAKE_STALE_AFTER = timedelta(minutes=10)
 INTAKE_HISTORY = timedelta(days=30)
@@ -48,8 +57,7 @@ CREATE TABLE IF NOT EXISTS documents (
     fields JSONB NOT NULL,
     crm JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (user_id, sha256)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS documents_user_idx ON documents (user_id, created_at DESC);
 CREATE TABLE IF NOT EXISTS sync_events (
@@ -90,6 +98,34 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     token_hash TEXT PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     expires_at TIMESTAMPTZ NOT NULL
+);
+-- Teams. Documents belong to a team, and everyone in it reviews them. Each account starts in a team of its own,
+-- which keeps the account's id, so accounts from before teams existed keep their documents.
+CREATE TABLE IF NOT EXISTS teams (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS team_id UUID REFERENCES teams(id);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS team_role TEXT NOT NULL DEFAULT 'owner';
+INSERT INTO teams (id) SELECT id FROM users WHERE team_id IS NULL ON CONFLICT (id) DO NOTHING;
+UPDATE users SET team_id = id WHERE team_id IS NULL;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS team_id UUID REFERENCES teams(id) ON DELETE CASCADE;
+UPDATE documents d SET team_id = u.team_id FROM users u WHERE d.user_id = u.id AND d.team_id IS NULL;
+-- A file is a duplicate when anyone in the team has uploaded it.
+ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_user_id_sha256_key;
+CREATE UNIQUE INDEX IF NOT EXISTS documents_team_file_idx ON documents (team_id, sha256);
+CREATE INDEX IF NOT EXISTS documents_team_idx ON documents (team_id, created_at DESC);
+ALTER TABLE sync_events ADD COLUMN IF NOT EXISTS actor TEXT NOT NULL DEFAULT '';
+CREATE TABLE IF NOT EXISTS team_invites (
+    id UUID PRIMARY KEY,
+    token_hash TEXT NOT NULL UNIQUE,
+    team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    invited_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (team_id, email)
 );
 """
 
@@ -156,14 +192,25 @@ class Store:
 
     # Users
 
+    @staticmethod
+    def _insert_user(db, email, password_hash=None, is_demo=False, email_verified=False, user_id=None):
+        """A new account in a team of its own, or None if the email is taken."""
+        user_id = user_id or uuid.uuid4()
+        db.execute("INSERT INTO teams (id) VALUES (%s)", (user_id,))
+        user = db.execute(
+            "INSERT INTO users (id, email, password_hash, is_demo, email_verified, team_id) VALUES (%s, %s, %s, %s, %s, %s) "
+            f"ON CONFLICT (email) DO NOTHING RETURNING {USER_COLUMNS}",
+            (user_id, email, password_hash, is_demo, email_verified, user_id),
+        ).fetchone()
+        if user is None:
+            db.execute("DELETE FROM teams WHERE id = %s", (user_id,))
+        return user
+
     def create_user(self, email, password):
         """Returns the new user, or None if the email is taken."""
+        password_hash = hash_password(password)
         with self._connect() as db:
-            return db.execute(
-                "INSERT INTO users (id, email, password_hash) VALUES (%s, %s, %s) "
-                f"ON CONFLICT (email) DO NOTHING RETURNING {USER_COLUMNS}",
-                (uuid.uuid4(), email.lower(), hash_password(password)),
-            ).fetchone()
+            return self._insert_user(db, email.lower(), password_hash)
 
     def authenticate(self, email, password):
         with self._connect() as db:
@@ -195,11 +242,7 @@ class Store:
         """The account for an email that Google has confirmed, created without a password if it's new."""
         email = email.lower()
         with self._connect() as db:
-            created = db.execute(
-                "INSERT INTO users (id, email, email_verified) VALUES (%s, %s, true) "
-                f"ON CONFLICT (email) DO NOTHING RETURNING {USER_COLUMNS}",
-                (uuid.uuid4(), email),
-            ).fetchone()
+            created = self._insert_user(db, email, email_verified=True)
             if created:
                 return created
             existing = db.execute(
@@ -255,14 +298,115 @@ class Store:
                 "DELETE FROM users WHERE is_demo AND created_at < %s",
                 (datetime.now(timezone.utc) - DEMO_LIFETIME,),
             )
+            # Demo accounts can't share, so their teams go with them.
+            db.execute("DELETE FROM teams t WHERE NOT EXISTS (SELECT 1 FROM users WHERE users.team_id = t.id)")
             db.execute("DELETE FROM rate_limits WHERE expires_at < now()")
-            user = db.execute(
-                f"INSERT INTO users (id, email, is_demo) VALUES (%s, %s, true) RETURNING {USER_COLUMNS}",
-                (user_id, f"demo-{user_id.hex[:12]}@inkfold.demo"),
-            ).fetchone()
+            user = self._insert_user(db, f"demo-{user_id.hex[:12]}@inkfold.demo", is_demo=True, user_id=user_id)
             for document in documents:
-                self._insert_document(db, user_id, **document)
+                self._insert_document(db, user_id, user_id, **document)
         return user
+
+    # Teams
+
+    def team(self, team_id):
+        with self._connect() as db:
+            return db.execute("SELECT id, name FROM teams WHERE id = %s", (team_id,)).fetchone()
+
+    def team_members(self, team_id):
+        with self._connect() as db:
+            return db.execute(
+                f"SELECT {MEMBER_COLUMNS} FROM users WHERE team_id = %s ORDER BY team_role DESC, created_at, email", (team_id,)
+            ).fetchall()
+
+    def rename_team(self, team_id, name):
+        with self._connect() as db:
+            db.execute("UPDATE teams SET name = %s WHERE id = %s", (name, team_id))
+
+    def create_invite(self, team_id, email, invited_by):
+        """A new invite link for `email`. Inviting the same address again replaces the old link."""
+        token = secrets.token_urlsafe(32)
+        with self._connect() as db:
+            db.execute("DELETE FROM team_invites WHERE expires_at < now()")
+            invite = db.execute(
+                "INSERT INTO team_invites (id, token_hash, team_id, email, invited_by, expires_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (team_id, email) DO UPDATE SET "
+                "token_hash = EXCLUDED.token_hash, invited_by = EXCLUDED.invited_by, "
+                "expires_at = EXCLUDED.expires_at, created_at = now() RETURNING id, email, expires_at",
+                (uuid.uuid4(), _token_hash(token), team_id, email.lower(), invited_by,
+                 datetime.now(timezone.utc) + INVITE_LIFETIME),
+            ).fetchone()
+        return token, invite
+
+    def team_invites(self, team_id):
+        with self._connect() as db:
+            return db.execute(
+                "SELECT id, email, expires_at FROM team_invites WHERE team_id = %s AND expires_at > now() ORDER BY created_at",
+                (team_id,),
+            ).fetchall()
+
+    def delete_invite(self, team_id, invite_id):
+        with self._connect() as db:
+            return db.execute("DELETE FROM team_invites WHERE id = %s AND team_id = %s", (invite_id, team_id)).rowcount > 0
+
+    def find_invite(self, token):
+        """The invite behind a link, with its team's name and who sent it, or None if it's unknown or expired."""
+        with self._connect() as db:
+            return db.execute(
+                "SELECT i.id, i.team_id, i.email, t.name AS team_name, u.email AS invited_by, "
+                "(SELECT count(*) FROM users m WHERE m.team_id = i.team_id) AS team_size "
+                "FROM team_invites i JOIN teams t ON t.id = i.team_id LEFT JOIN users u ON u.id = i.invited_by "
+                "WHERE i.token_hash = %s AND i.expires_at > now()",
+                (_token_hash(token),),
+            ).fetchone()
+
+    def join_team(self, user_id, token):
+        """Use an invite. Returns ("joined", documents moved), or a reason it can't be used:
+        "invalid", "wrong_email" or "owner_with_members"."""
+        with self._connect() as db:
+            invite = db.execute(
+                "SELECT id, team_id, email FROM team_invites WHERE token_hash = %s AND expires_at > now() FOR UPDATE",
+                (_token_hash(token),),
+            ).fetchone()
+            if invite is None:
+                return "invalid", 0
+            user = db.execute("SELECT id, email, team_id, team_role FROM users WHERE id = %s FOR UPDATE", (user_id,)).fetchone()
+            if user["email"] != invite["email"]:
+                return "wrong_email", 0
+            old, new, moved = user["team_id"], invite["team_id"], 0
+            if old != new:
+                others = db.execute(
+                    "SELECT count(*) AS n FROM users WHERE team_id = %s AND id <> %s", (old, user_id)
+                ).fetchone()["n"]
+                if others and user["team_role"] == "owner":
+                    return "owner_with_members", 0
+                db.execute("UPDATE users SET team_id = %s, team_role = 'member' WHERE id = %s", (new, user_id))
+                if not others:
+                    # Someone working alone brings their documents. Files the team already has stay as the team's copy.
+                    db.execute(
+                        "DELETE FROM documents d WHERE d.team_id = %s AND EXISTS "
+                        "(SELECT 1 FROM documents t WHERE t.team_id = %s AND t.sha256 = d.sha256)",
+                        (old, new),
+                    )
+                    moved = db.execute("UPDATE documents SET team_id = %s WHERE team_id = %s", (new, old)).rowcount
+                    db.execute("DELETE FROM teams WHERE id = %s", (old,))
+            db.execute("DELETE FROM team_invites WHERE id = %s", (invite["id"],))
+        return "joined", moved
+
+    def leave_team(self, user_id, team_id):
+        """Move a member out of `team_id` into a team of their own. The documents stay with the team.
+
+        False if they aren't a member of that team, or are its owner.
+        """
+        new = uuid.uuid4()
+        with self._connect() as db:
+            db.execute("INSERT INTO teams (id) VALUES (%s)", (new,))
+            moved = db.execute(
+                "UPDATE users SET team_id = %s, team_role = 'owner' WHERE id = %s AND team_id = %s AND team_role = 'member'",
+                (new, user_id, team_id),
+            ).rowcount
+            if not moved:
+                db.execute("DELETE FROM teams WHERE id = %s", (new,))
+        return moved > 0
 
     # Email intake
 
@@ -334,19 +478,19 @@ class Store:
     # Documents
 
     @staticmethod
-    def _insert_document(db, user_id, filename, mime, size, sha256, doc_type, status, fields, error=None, source=None):
+    def _insert_document(db, user_id, team_id, filename, mime, size, sha256, doc_type, status, fields, error=None, source=None):
         return db.execute(
-            f"INSERT INTO documents (id, user_id, filename, mime, size, sha256, doc_type, status, error, fields, source) "
-            f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
-            f"ON CONFLICT (user_id, sha256) DO NOTHING RETURNING {DOCUMENT_COLUMNS}",
-            (uuid.uuid4(), user_id, filename, mime, size, sha256, doc_type, status, error, Jsonb(fields),
+            f"INSERT INTO documents (id, user_id, team_id, filename, mime, size, sha256, doc_type, status, error, fields, source) "
+            f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+            f"ON CONFLICT (team_id, sha256) DO NOTHING RETURNING {DOCUMENT_COLUMNS}",
+            (uuid.uuid4(), user_id, team_id, filename, mime, size, sha256, doc_type, status, error, Jsonb(fields),
              Jsonb(source) if source else None),
         ).fetchone()
 
-    def add_document(self, user_id, data=None, **document):
-        """Returns the new document, or None if this user already uploaded the same file. `data` keeps the original."""
+    def add_document(self, user, data=None, **document):
+        """Returns the new document, or None if the team already has the same file. `data` keeps the original."""
         with self._connect() as db:
-            stored = self._insert_document(db, user_id, **document)
+            stored = self._insert_document(db, user["id"], user["team_id"], **document)
             if stored and data:
                 db.execute("DELETE FROM document_files WHERE created_at < %s", (datetime.now(timezone.utc) - FILE_LIFETIME,))
                 db.execute("INSERT INTO document_files (document_id, data) VALUES (%s, %s)", (stored["id"], data))
@@ -358,39 +502,44 @@ class Store:
             row = db.execute("SELECT data FROM document_files WHERE document_id = %s", (document_id,)).fetchone()
         return bytes(row["data"]) if row else None
 
-    def find_document_by_hash(self, user_id, sha256):
+    def find_document_by_hash(self, team_id, sha256):
         with self._connect() as db:
             return db.execute(
-                f"SELECT {DOCUMENT_COLUMNS} FROM documents WHERE user_id = %s AND sha256 = %s", (user_id, sha256)
+                f"SELECT {DOCUMENT_COLUMNS} FROM documents WHERE team_id = %s AND sha256 = %s", (team_id, sha256)
             ).fetchone()
 
-    def list_documents(self, user_id):
+    def list_documents(self, team_id):
         with self._connect() as db:
             return db.execute(
-                f"SELECT {DOCUMENT_COLUMNS} FROM documents WHERE user_id = %s ORDER BY created_at DESC, id", (user_id,)
+                f"SELECT {DOCUMENT_COLUMNS} FROM documents WHERE team_id = %s ORDER BY created_at DESC, id", (team_id,)
             ).fetchall()
 
-    def get_document(self, document_id, user_id=None):
-        """Pass user_id to only find that user's document."""
+    def get_document(self, document_id, team_id=None):
+        """Pass team_id to only find that team's document."""
         query = f"SELECT {DOCUMENT_COLUMNS} FROM documents WHERE id = %s"
         params = [document_id]
-        if user_id is not None:
-            query += " AND user_id = %s"
-            params.append(user_id)
+        if team_id is not None:
+            query += " AND team_id = %s"
+            params.append(team_id)
         with self._connect() as db:
             return db.execute(query, params).fetchone()
 
-    def update_document(self, document_id, *, only_if_status=None, **changes):
-        """Returns the updated document, or None if it wasn't in one of `only_if_status`."""
+    def update_document(self, document_id, *, only_if_status=None, only_if_updated_at=None, **changes):
+        """Returns the updated document, or None if it wasn't in one of `only_if_status`.
+
+        With `only_if_updated_at`, also None if someone changed it since then.
+        """
         values = {key: Jsonb(value) if key in ("fields", "crm") and value is not None else value for key, value in changes.items()}
         assignments = ", ".join(f"{key} = %({key})s" for key in values)
         query = f"UPDATE documents SET {assignments}, updated_at = now() WHERE id = %(id)s"
         if only_if_status:
             query += " AND status = ANY(%(only_if_status)s)"
+        if only_if_updated_at:
+            query += " AND updated_at = %(only_if_updated_at)s"
         with self._connect() as db:
             return db.execute(
                 query + f" RETURNING {DOCUMENT_COLUMNS}",
-                {**values, "id": document_id, "only_if_status": list(only_if_status or ())},
+                {**values, "id": document_id, "only_if_status": list(only_if_status or ()), "only_if_updated_at": only_if_updated_at},
             ).fetchone()
 
     def claim_sync(self, document_id):
@@ -406,20 +555,20 @@ class Store:
             ).fetchone()
         return row is not None
 
-    def delete_document(self, document_id, user_id):
+    def delete_document(self, document_id, team_id):
         with self._connect() as db:
-            return db.execute("DELETE FROM documents WHERE id = %s AND user_id = %s", (document_id, user_id)).rowcount > 0
+            return db.execute("DELETE FROM documents WHERE id = %s AND team_id = %s", (document_id, team_id)).rowcount > 0
 
-    def add_sync_event(self, document_id, channel, status, detail=""):
+    def add_sync_event(self, document_id, channel, status, detail="", actor=""):
         with self._connect() as db:
             db.execute(
-                "INSERT INTO sync_events (document_id, channel, status, detail) VALUES (%s, %s, %s, %s)",
-                (document_id, channel, status, detail),
+                "INSERT INTO sync_events (document_id, channel, status, detail, actor) VALUES (%s, %s, %s, %s, %s)",
+                (document_id, channel, status, detail, actor),
             )
 
     def sync_events(self, document_id):
         with self._connect() as db:
             return db.execute(
-                "SELECT id, channel, status, detail, created_at FROM sync_events WHERE document_id = %s ORDER BY id",
+                "SELECT id, channel, status, detail, actor, created_at FROM sync_events WHERE document_id = %s ORDER BY id",
                 (document_id,),
             ).fetchall()

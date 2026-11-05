@@ -14,14 +14,17 @@ export function Mark() {
 export default function Header({ user, onSignOut }) {
   return (
     <header className="topbar">
-      <Link to="/" className="brand">
+      <Link to="/" className="brand" aria-label="Inkfold home">
         <Mark />
-        Inkfold
+        <span className="brand-name">Inkfold</span>
       </Link>
       <nav className="topbar-right" aria-label="Account">
         {user && (
           <>
             <span className="who">{user.is_demo ? 'Demo account' : user.email}</span>
+            <Link to="/team" className="link-button">
+              Team
+            </Link>
             {!user.is_demo && (
               <Link to="/account" className="link-button">
                 Account

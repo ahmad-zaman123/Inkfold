@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
   <img src="https://img.shields.io/badge/HubSpot-CRM%20API-FF7A59?logo=hubspot&logoColor=white&style=flat-square" alt="HubSpot" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-216%20passing-2ea44f?style=flat-square" alt="216 tests passing" />
+  <img src="https://img.shields.io/badge/tests-230%20passing-2ea44f?style=flat-square" alt="230 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -172,7 +172,7 @@ The model only proposes values. Code decides what they mean: it parses the dates
 <td width="50%" valign="top">
 
 ### 🔍 Every value shows its source
-Each field keeps the text it was read from and a confidence score. Low-confidence fields are flagged, and anything you change is marked "Edited by you".
+Each field keeps the text it was read from and a confidence score. Low-confidence fields are flagged, and anything you change is marked as edited, with who changed it.
 
 ### 📄 The original beside the fields
 The uploaded file sits next to the fields, with every value highlighted where it was read. Hover or focus a field and its highlight lights up and scrolls into view; click a highlight to jump to its field. PDFs render with pdf.js and text files as text. Photos have zoom but no highlights, since they have no text layer.
@@ -203,6 +203,9 @@ The same HubSpot calls run either in the API or in an n8n workflow you can exten
 
 ### ✍️ Signed both ways
 Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timestamp and exact body, checked in constant time and refused after 5 minutes. A repeated callback changes nothing.
+
+### 👥 Teams
+Invite teammates by email to review the same documents and send them to the same HubSpot account. Everyone sees who added each document, who edited each field and who sent it. If two people edit the same document, the second save is refused rather than quietly overwriting the first, and "Load their version" brings in the newer copy with your changes still in place. Invite links are single use, tied to one email address, expire in 7 days and are stored only as hashes. Someone working alone who joins brings their documents along.
 
 ### 📚 Batch upload
 Drop up to 10 files at once. They're read two at a time, each with its own result, and "Next to review" walks you through whatever is still waiting.
@@ -236,10 +239,15 @@ Drop up to 10 files at once. They're read two at a time, each with its own resul
 | `GET` | `/api/documents/{id}/file` | The original upload, served sandboxed so it can't run as a page. |
 | `GET` | `/api/documents/{id}/matches` | The contact, company and deal already in HubSpot that a send would touch. |
 | `GET` | `/api/documents`, `/api/documents/{id}` | List documents, or one with its fields, issues and sync history. |
-| `PATCH` | `/api/documents/{id}/fields` | Save edits, as `{"fields": {"contact.phone": "+1 617 555 0123"}}`. |
+| `PATCH` | `/api/documents/{id}/fields` | Save edits, as `{"fields": {"contact.phone": "+1 617 555 0123"}, "base_updated_at": "..."}`. `409` if someone saved since `base_updated_at`. |
 | `POST` | `/api/documents/{id}/sync` | Send to HubSpot. `422` with the missing fields if it isn't ready. |
 | `POST` | `/api/sync/callback` | n8n's signed result. |
 | `DELETE` | `/api/documents/{id}` | Delete a document from Inkfold (not from HubSpot). |
+| `GET`, `PATCH` | `/api/team` | Your team, its people and open invites. `PATCH` renames it (owner only). |
+| `POST` | `/api/team/invites` | Invite an email. Returns the link, and emails it when SMTP is set. |
+| `DELETE` | `/api/team/invites/{id}`, `/api/team/members/{id}` | Cancel an invite, or remove someone (owner only). |
+| `POST` | `/api/team/leave` | Leave the team. What you added stays with it. |
+| `GET`, `POST` | `/api/invites/{token}`, `/api/invites/{token}/accept` | What an invite is for, then accept it. |
 
 ## 🚦 Limits
 
@@ -247,6 +255,8 @@ Drop up to 10 files at once. They're read two at a time, each with its own resul
 - Scanned PDFs work when Gemini can read them; there's no separate OCR step.
 - Deleting a document in Inkfold leaves its HubSpot records in place.
 - Deals use HubSpot's default pipeline.
+- A team has one owner, who can't hand the role over or leave. Everyone shares the one HubSpot account the server is set up with; there's no per-team HubSpot connection.
+- An owner with teammates can't join another team until they've removed them. The demo can't invite or join.
 - The duplicate warning needs `HUBSPOT_TOKEN`. With n8n alone there's nothing to search HubSpot with, so it doesn't show.
 - A batch counts against the daily upload limit like single uploads, so the default of 10 per user is one full batch.
 - Originals are kept for 30 days, in Postgres, so the database stays small. After that the fields stay and the original pane says the file is gone. Documents from before this feature have no original.
@@ -286,14 +296,14 @@ Inkfold/
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              206 tests against a real Postgres
+│   ├── tests/              220 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json
 ├── Frontend/
 │   ├── src/
 │   │   ├── components/     upload, email intake, original viewer, field rows, line items, HubSpot panel, Google button
-│   │   ├── pages/          landing, sign-in, password reset, account, documents, review
+│   │   ├── pages/          landing, sign-in, password reset, account, team, join, documents, review
 │   │   ├── api.js          API client
 │   │   ├── highlight.js    finds each field's source text in the original
 │   │   └── styles.css

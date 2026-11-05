@@ -61,6 +61,15 @@ RATE_LIMITS = {
     # Each look-up is three HubSpot searches.
     "crm_lookup": (60, timedelta(minutes=10), "Too many HubSpot look-ups. Please wait a few minutes."),
     "sync_user": (20, timedelta(days=1), "You've sent a lot to HubSpot today. Please try again tomorrow."),
+    "invite": (20, timedelta(days=1), "You've sent a lot of invites today. Please try again tomorrow."),
+    "invite_view": (60, timedelta(hours=1), BUSY),
+    "team_change": (20, timedelta(hours=1), BUSY),
+}
+EDIT_CONFLICT = "Someone else saved this document while you were editing."
+JOIN_PROBLEMS = {
+    "invalid": (404, "This invite is invalid or has expired. Ask for a new one."),
+    "wrong_email": (403, "This invite is for a different email address. Sign in with that address to accept it."),
+    "owner_with_members": (409, "You run a team with other people in it. Remove them before joining another team."),
 }
 # The demo's documents are the sample files, served from here so each demo account doesn't store copies.
 DEMO_FILES = Path(__file__).resolve().parent / "demo_files"
@@ -125,6 +134,16 @@ class PasswordChange(BaseModel):
 
 class FieldEdits(BaseModel):
     fields: dict[str, Any] = Field(max_length=len(FIELDS))
+    # The version the edits were made on. A newer saved version means a teammate got there first.
+    base_updated_at: datetime | None = None
+
+
+class TeamName(BaseModel):
+    name: StorableText = Field(max_length=80)
+
+
+class Invite(BaseModel):
+    email: EmailStr
 
 
 def sniff_mime(data, filename):
@@ -183,7 +202,7 @@ def is_stale_sync(document):
 def public_document(document, events=None):
     summary = {
         key: document[key]
-        for key in ("id", "filename", "mime", "size", "doc_type", "status", "error", "source", "created_at", "updated_at")
+        for key in ("id", "filename", "mime", "size", "doc_type", "status", "error", "source", "created_at", "updated_at", "added_by")
     }
     summary["id"] = str(document["id"])
     summary["title"] = title_of(document)
@@ -272,7 +291,13 @@ def create_app(
         return {"token": token, "user": public_user(user)}
 
     def public_user(user):
-        return {"id": str(user["id"]), "email": user["email"], "is_demo": user["is_demo"], "has_password": user["has_password"]}
+        return {
+            "id": str(user["id"]),
+            "email": user["email"],
+            "is_demo": user["is_demo"],
+            "has_password": user["has_password"],
+            "team": {"role": user["team_role"], "size": user["team_size"]},
+        }
 
     def current_user(authorization: str = Header(default="")):
         scheme, _, token = authorization.partition(" ")
@@ -292,7 +317,7 @@ def create_app(
         return user
 
     def own_document(document_id, user):
-        document = store.get_document(parse_id(document_id), user["id"])
+        document = store.get_document(parse_id(document_id), user["team_id"])
         if document is None:
             raise HTTPException(status_code=404, detail="Document not found.")
         return document
@@ -414,7 +439,7 @@ def create_app(
             raise HTTPException(status_code=415, detail=WRONG_TYPE)
 
         sha256 = hashlib.sha256(data).hexdigest()
-        existing = store.find_document_by_hash(user["id"], sha256)
+        existing = store.find_document_by_hash(user["team_id"], sha256)
         if existing:
             return existing, True
 
@@ -432,10 +457,10 @@ def create_app(
         else:
             document.update(doc_type=extracted["doc_type"], status="needs_review", fields=normalize_fields(extracted["fields"]))
 
-        stored = store.add_document(user["id"], data=data, **document)
+        stored = store.add_document(user, data=data, **document)
         if stored is None:
             # The same file arrived twice at once. Use the copy that was saved first.
-            return store.find_document_by_hash(user["id"], sha256), True
+            return store.find_document_by_hash(user["team_id"], sha256), True
         return stored, False
 
     @app.post("/api/documents", status_code=201)
@@ -569,7 +594,7 @@ def create_app(
 
     @app.get("/api/documents")
     def list_documents(user=Depends(current_user)):
-        return {"documents": [public_document(d) for d in store.list_documents(user["id"])]}
+        return {"documents": [public_document(d) for d in store.list_documents(user["team_id"])]}
 
     @app.get("/api/documents/{document_id}")
     def get_document(document_id: str, user=Depends(current_user)):
@@ -603,12 +628,21 @@ def create_app(
             raise HTTPException(status_code=409, detail="Wait for the send to HubSpot to finish before editing.")
         for key, value in body.fields.items():
             check_edit(key, value)
-        fields = apply_edits(document["fields"], body.fields)
+        if body.base_updated_at and body.base_updated_at != document["updated_at"]:
+            raise HTTPException(status_code=409, detail=EDIT_CONFLICT)
+        fields = apply_edits(document["fields"], body.fields, editor=user["email"])
         # A changed document can be sent again, which updates the same HubSpot records.
         allowed = ("needs_review", "failed", "synced", "sync_failed") + (("syncing",) if is_stale_sync(document) else ())
-        updated = store.update_document(document["id"], only_if_status=allowed, fields=fields, status="needs_review", error=None)
+        # Checked again as part of the update, so two saves at the same moment can't both win.
+        updated = store.update_document(
+            document["id"], only_if_status=allowed, only_if_updated_at=document["updated_at"],
+            fields=fields, status="needs_review", error=None,
+        )
         if updated is None:
-            raise HTTPException(status_code=409, detail="Wait for the send to HubSpot to finish before editing.")
+            latest = store.get_document(document["id"])
+            if latest and latest["status"] == "syncing":
+                raise HTTPException(status_code=409, detail="Wait for the send to HubSpot to finish before editing.")
+            raise HTTPException(status_code=409, detail=EDIT_CONFLICT)
         return full(updated)
 
     def hubspot_client():
@@ -665,7 +699,7 @@ def create_app(
             payload = build_n8n_payload(
                 str(document["id"]), record, settings["public_api_url"] + "/api/sync/callback", document["crm"]
             )
-            store.add_sync_event(document["id"], "n8n", "sent", "Sent to the n8n workflow.")
+            store.add_sync_event(document["id"], "n8n", "sent", "Sent to the n8n workflow.", actor=user["email"])
             try:
                 send_to_n8n(settings["n8n_webhook_url"], settings["n8n_shared_secret"], payload, client=http)
             except SyncError as error:
@@ -676,10 +710,10 @@ def create_app(
         try:
             crm = hubspot_client().push(record, existing=document["crm"])
         except CrmError as error:
-            store.add_sync_event(document["id"], "direct", "failed", error.message)
+            store.add_sync_event(document["id"], "direct", "failed", error.message, actor=user["email"])
             store.update_document(document["id"], status="sync_failed", error=error.message)
         else:
-            store.add_sync_event(document["id"], "direct", "synced", crm_summary(crm))
+            store.add_sync_event(document["id"], "direct", "synced", crm_summary(crm), actor=user["email"])
             store.update_document(document["id"], status="synced", crm=crm, error=None)
         return full(store.get_document(document["id"]))
 
@@ -712,9 +746,115 @@ def create_app(
             store.add_sync_event(document_id, "n8n", result.status, detail)
         return {"ok": True}
 
+    # Teams. Everyone in a team sees and reviews the same documents and sends them through the same HubSpot.
+
+    def team_view(user):
+        team = store.team(user["team_id"])
+        owner = user["team_role"] == "owner"
+        return {
+            "name": team["name"],
+            "role": user["team_role"],
+            # The demo is private and deleted after two days, so it can't take anyone in.
+            "can_invite": owner and not user["is_demo"],
+            "members": [
+                {"id": str(m["id"]), "email": m["email"], "role": m["team_role"], "you": m["id"] == user["id"]}
+                for m in store.team_members(user["team_id"])
+            ],
+            "invites": [{**i, "id": str(i["id"])} for i in store.team_invites(user["team_id"])] if owner else [],
+            "email_invites": send_email is not None,
+        }
+
+    def need_owner(user):
+        if user["team_role"] != "owner":
+            raise HTTPException(status_code=403, detail="Only the team's owner can do that.")
+        if user["is_demo"]:
+            raise HTTPException(status_code=403, detail="Create an account to invite teammates.")
+
+    @app.get("/api/team")
+    def get_team(user=Depends(current_user)):
+        return team_view(user)
+
+    @app.patch("/api/team")
+    def rename_team(body: TeamName, user=Depends(current_user)):
+        need_owner(user)
+        store.rename_team(user["team_id"], body.name.strip())
+        return team_view(user)
+
+    @app.post("/api/team/invites", status_code=201)
+    def invite(body: Invite, user=Depends(current_user)):
+        need_owner(user)
+        email = body.email.lower()
+        if any(m["email"] == email for m in store.team_members(user["team_id"])):
+            raise HTTPException(status_code=409, detail="This person is already in your team.")
+        enforce_limit("invite", user["id"])
+        token, created = store.create_invite(user["team_id"], email, user["id"])
+        link = f"{settings['app_url']}/join/{token}"
+        emailed = False
+        if send_email is not None:
+            team = store.team(user["team_id"])["name"] or "their team"
+            try:
+                send_email(
+                    email,
+                    f"{user['email']} invited you to Inkfold",
+                    "Join the team on Inkfold",
+                    f"{user['email']} invited you to {team} on Inkfold, to review documents together "
+                    "and send them to HubSpot.",
+                    "Accept the invite",
+                    link,
+                    "Expires in 7 days.",
+                    f"Sign in or create an account as {email} to accept. If you weren't expecting this, you can ignore it.",
+                )
+                emailed = True
+            except Exception:
+                logger.exception("Could not send a team invite")
+        # The link comes back too, so it can be shared another way when email is off or doesn't arrive.
+        return {**team_view(user), "invite": {**created, "id": str(created["id"]), "link": link, "emailed": emailed}}
+
+    @app.delete("/api/team/invites/{invite_id}")
+    def cancel_invite(invite_id: str, user=Depends(current_user)):
+        need_owner(user)
+        if not store.delete_invite(user["team_id"], parse_id(invite_id)):
+            raise HTTPException(status_code=404, detail="Invite not found.")
+        return team_view(user)
+
+    @app.delete("/api/team/members/{member_id}")
+    def remove_member(member_id: str, user=Depends(current_user)):
+        need_owner(user)
+        if not store.leave_team(parse_id(member_id), user["team_id"]):
+            raise HTTPException(status_code=404, detail="That person isn't a member of your team.")
+        return team_view(user)
+
+    @app.post("/api/team/leave")
+    def leave_team(user=Depends(current_user)):
+        if user["team_role"] == "owner":
+            raise HTTPException(status_code=409, detail="The owner can't leave the team.")
+        enforce_limit("team_change", user["id"])
+        store.leave_team(user["id"], user["team_id"])
+        return team_view(store.get_user(user["id"]))
+
+    @app.get("/api/invites/{token}")
+    def get_invite(token: str, request: Request):
+        """What an invite link is for, shown before the person signs in."""
+        enforce_limit("invite_view", client_ip(request))
+        found = store.find_invite(token[:200])
+        if found is None:
+            raise HTTPException(status_code=404, detail=JOIN_PROBLEMS["invalid"][1])
+        return {"team": found["team_name"], "invited_by": found["invited_by"], "email": found["email"], "team_size": found["team_size"]}
+
+    @app.post("/api/invites/{token}/accept")
+    def accept_invite(token: str, user=Depends(current_user)):
+        if user["is_demo"]:
+            raise HTTPException(status_code=403, detail="Sign in with your own account to join a team.")
+        enforce_limit("team_change", user["id"])
+        result, moved = store.join_team(user["id"], token[:200])
+        if result != "joined":
+            status, detail = JOIN_PROBLEMS[result]
+            raise HTTPException(status_code=status, detail=detail)
+        return {**team_view(store.get_user(user["id"])), "moved": moved}
+
     @app.delete("/api/documents/{document_id}", status_code=204)
     def delete_document(document_id: str, user=Depends(current_user)):
-        if not store.delete_document(parse_id(document_id), user["id"]):
+        if not store.delete_document(parse_id(document_id), user["team_id"]):
             raise HTTPException(status_code=404, detail="Document not found.")
         return Response(status_code=204)
 

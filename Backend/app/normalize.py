@@ -219,6 +219,8 @@ def normalize_fields(raw, edited_keys=frozenset()):
             "issues": [issue] if issue else [],
             "edited": edited,
         }
+        if edited and entry.get("edited_by"):
+            fields[key]["edited_by"] = str(entry["edited_by"])
     _check_invoice(fields)
     return fields
 
@@ -237,14 +239,17 @@ def _check_invoice(fields):
             due["issues"].append("The due date is before the issue date.")
 
 
-def apply_edits(fields, edits):
-    """Applies the user's changes, then checks every field again so cross-field problems update too."""
+def apply_edits(fields, edits, editor=""):
+    """Applies the user's changes, then checks every field again so cross-field problems update too.
+
+    `editor` is who made them, so teammates can see who changed a value.
+    """
     unknown = [key for key in edits if key not in FIELDS]
     if unknown:
         raise ValueError(unknown[0])
     raw = {key: dict(field) for key, field in fields.items()}
     for key, value in edits.items():
-        raw[key] = {"value": value, "confidence": 1.0, "source": EDITED_SOURCE, "edited": True}
+        raw[key] = {"value": value, "confidence": 1.0, "source": EDITED_SOURCE, "edited": True, "edited_by": editor}
     return normalize_fields(raw)
 
 

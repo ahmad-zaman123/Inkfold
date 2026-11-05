@@ -22,4 +22,4 @@ FIELDS = {
 # HubSpot matches contacts by email, so nothing can be sent without one.
 REQUIRED_FOR_SYNC = ("contact.email",)
 
-EDITED_SOURCE = "Edited by you"
+EDITED_SOURCE = "Edited in Inkfold"
