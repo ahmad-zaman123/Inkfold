@@ -28,7 +28,7 @@ export default function Landing({ onDemo }) {
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">Document to CRM</p>
-          <h1>Turn invoices, receipts, business cards and resumes into CRM records.</h1>
+          <h1>Turn invoices, receipts, business cards and resumes into CRM records</h1>
           <p className="lede">
             Gemini reads the document and fills in the fields. You check anything it wasn't sure about, then send it to
             HubSpot, Pipedrive or Google Sheets in one click.
