@@ -256,6 +256,8 @@ input:disabled, textarea:disabled { background: var(--surface-2); color: var(--m
 .back { display: inline-block; margin-bottom: 14px; font-weight: 600; text-decoration: none; }
 .review-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .review-head h1 { overflow-wrap: anywhere; }
+.type-select { width: auto; padding: 3px 8px; font: inherit; font-size: 0.88rem; color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule-strong); border-radius: 6px; cursor: pointer; }
+.type-select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .review-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; margin-top: 22px; align-items: start; }
 .review-grid > * { min-width: 0; }
 .fields { display: grid; gap: 18px; }
@@ -326,6 +328,13 @@ input:disabled, textarea:disabled { background: var(--surface-2); color: var(--m
 .invite-sent { margin-top: 14px; padding: 14px; border-radius: 8px; background: var(--ok-soft); }
 .invite-sent p { margin: 0 0 10px; }
 .copy-link { display: flex; gap: 8px; }
+.destination-options { display: grid; gap: 8px; }
+.destination-option { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: baseline; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 8px; cursor: pointer; }
+.destination-option.chosen { border-color: var(--accent); background: var(--accent-soft); }
+.destination-option input { width: auto; margin: 0; accent-color: var(--accent); }
+.destination-name { font-weight: 600; }
+.destination-hint { grid-column: 2; color: var(--muted); font-size: 0.88rem; }
+.destination-option:has(input:disabled) { cursor: default; }
 .copy-link input { flex: 1 1 auto; min-width: 0; font-family: var(--mono); font-size: 0.82rem; }
 .small-note { font-size: 0.9rem; }
 .event-who { font-weight: 400; color: var(--ink-2); }

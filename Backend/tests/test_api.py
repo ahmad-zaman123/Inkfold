@@ -496,6 +496,24 @@ def test_edits_are_checked_and_marked(client, auth):
     assert edited["missing"] == ["contact.email"] and edited["can_sync"] is False
 
 
+def test_the_document_type_can_be_corrected(client, auth):
+    document = uploaded(client, auth)
+    changed = client.patch(f"/api/documents/{document['id']}/fields", json={"fields": {}, "doc_type": "resume"}, headers=auth)
+    assert changed.status_code == 200 and changed.json()["doc_type"] == "resume"
+    refused = client.patch(f"/api/documents/{document['id']}/fields", json={"fields": {}, "doc_type": "spaceship"}, headers=auth)
+    assert refused.status_code == 422
+
+
+def test_documents_from_before_new_fields_are_filled_in(client, auth, database_url):
+    document = uploaded(client, auth)
+    with psycopg.connect(database_url, autocommit=True) as db:
+        db.execute("UPDATE documents SET fields = fields - 'resume.skills' - 'contact.location'")
+    fetched = client.get(f"/api/documents/{document['id']}", headers=auth).json()
+    assert fetched["fields"]["resume.skills"]["value"] is None and fetched["fields"]["contact.location"]["issues"] == []
+    edited = client.patch(f"/api/documents/{document['id']}/fields", json={"fields": {"resume.skills": "SQL"}}, headers=auth)
+    assert edited.json()["fields"]["resume.skills"]["value"] == "SQL"
+
+
 def test_line_items_can_be_edited(client, auth):
     document = uploaded(client, auth)
     items = [{"description": "Desk", "quantity": "2", "unit_price": "480", "amount": "960"}]
@@ -566,7 +584,7 @@ def test_sync_without_hubspot_or_n8n(build):
     auth = sign_in(client)
     document = uploaded(client, auth)
     response = client.post(f"/api/documents/{document['id']}/sync", headers=auth)
-    assert response.status_code == 503 and response.json()["detail"] == "HubSpot isn't connected yet."
+    assert response.status_code == 503 and response.json()["detail"] == "Nothing to send to yet. Connect HubSpot, Pipedrive or Google Sheets."
     assert client.get(f"/api/documents/{document['id']}", headers=auth).json()["status"] == "needs_review"
 
 
@@ -576,7 +594,7 @@ def test_sync_without_hubspot_or_n8n(build):
 def test_matches_finds_nothing_for_a_new_contact(client, auth, services):
     document = uploaded(client, auth)
     found = client.get(f"/api/documents/{document['id']}/matches", headers=auth).json()
-    assert found == {"available": True, "contact": None, "company": None, "deal": None}
+    assert found == {"available": True, "destination": "hubspot", "contact": None, "company": None, "deal": None}
     searches = [r for r in services.requests if r.path.endswith("/search")]
     assert [r.path for r in searches] == ["/crm/v3/objects/contacts/search", "/crm/v3/objects/companies/search"]
     assert searches[0].body["filterGroups"][0]["filters"][0] == {"propertyName": "email", "operator": "EQ", "value": "omar@kestrel.example"}
@@ -693,7 +711,7 @@ def test_signed_callback_marks_the_document_synced(n8n):
     crm = {"contact_id": "7", "company_id": "8", "deal_id": None, "note_id": "9", "contact_url": "https://app.hubspot.com/contacts/1/record/0-1/7", "deal_url": None}
     assert callback(n8n, {"document_id": document["id"], "status": "synced", "crm": {**crm, "extra": "ignored"}}).json() == {"ok": True}
     result = n8n.get(f"/api/documents/{document['id']}", headers=auth).json()
-    assert result["status"] == "synced" and result["crm"] == crm
+    assert result["status"] == "synced" and result["crm"] == {**crm, "destination": "hubspot"}
     assert [(e["channel"], e["status"]) for e in result["sync_events"]] == [("n8n", "sent"), ("n8n", "synced")]
 
 

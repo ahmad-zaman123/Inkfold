@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 
 const STEPS = [
-  ['Upload', 'A PDF, photo or text file of an invoice, business card or lead form.'],
+  ['Upload', 'A PDF, photo or text file: an invoice, receipt, purchase order, business card, lead form or resume.'],
   ['Check', 'Each field shows how sure the AI is and the exact text it came from. Anything doubtful is flagged.'],
-  ['Send', 'The contact, company, deal and a note go to HubSpot, straight from the app or through an n8n workflow.'],
+  ['Send', 'The contact, company, deal and a note go to HubSpot or Pipedrive, or a row goes to a Google Sheet. Your team picks where.'],
 ]
 
 export default function Landing({ onDemo }) {
@@ -28,10 +28,10 @@ export default function Landing({ onDemo }) {
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">Document to CRM</p>
-          <h1>Turn invoices, business cards and lead forms into HubSpot records.</h1>
+          <h1>Turn invoices, receipts, business cards and resumes into CRM records.</h1>
           <p className="lede">
             Gemini reads the document and fills in the fields. You check anything it wasn't sure about, then send it to
-            HubSpot in one click.
+            HubSpot, Pipedrive or Google Sheets in one click.
           </p>
           <div className="actions">
             <button type="button" className="button primary" onClick={startDemo} disabled={busy}>

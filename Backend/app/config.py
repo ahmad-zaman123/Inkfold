@@ -25,6 +25,8 @@ def load_settings():
     smtp_user = os.environ.get("SMTP_USER", "")
     smtp_password = os.environ.get("SMTP_PASSWORD", "")
     intake_inbox = os.environ.get("INTAKE_EMAIL", "")
+    sheets_account = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+    sheets_id = os.environ.get("GOOGLE_SHEETS_ID", "")
     intake_password = os.environ.get("INTAKE_PASSWORD", "")
     missing = [n for n in ("DATABASE_URL", "JWT_SECRET", "GEMINI_API_KEY") if not os.environ.get(n)]
     n8n_url = os.environ.get("N8N_WEBHOOK_URL", "")
@@ -42,6 +44,16 @@ def load_settings():
         "hubspot_deal_stage": os.environ.get("HUBSPOT_DEAL_STAGE", "closedwon"),
         # Only changed to point at a local stand-in for HubSpot when testing.
         "hubspot_base_url": os.environ.get("HUBSPOT_BASE_URL", ""),
+        # Pipedrive, a second CRM. The domain is the company's subdomain, used for links to the records.
+        "pipedrive_token": os.environ.get("PIPEDRIVE_API_TOKEN", ""),
+        "pipedrive_domain": os.environ.get("PIPEDRIVE_DOMAIN", ""),
+        "pipedrive_base_url": os.environ.get("PIPEDRIVE_BASE_URL", ""),
+        # Google Sheets, for teams without a CRM: one row per document, written by a service account.
+        "sheets": (sheets_account and sheets_id and {
+            "service_account": sheets_account,
+            "spreadsheet_id": sheets_id,
+            "tab": os.environ.get("GOOGLE_SHEETS_TAB", "Inkfold"),
+        }) or None,
         "n8n_webhook_url": n8n_url,
         "n8n_shared_secret": os.environ.get("N8N_SHARED_SECRET", ""),
         # n8n posts its result here, so it must be an address n8n can reach.

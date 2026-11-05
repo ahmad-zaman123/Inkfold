@@ -1,8 +1,8 @@
 <h1 align="center">📇 Inkfold</h1>
 
 <p align="center">
-  <b>Business documents into HubSpot, checked by a person first.</b><br/>
-  Upload or email in an invoice, a business card or a lead form. Inkfold reads it, cleans up the fields, shows you what it's unsure about and saves the contact, company, deal and note to HubSpot, directly or through an n8n workflow.
+  <b>Business documents into your CRM, checked by a person first.</b><br/>
+  Upload or email in an invoice, receipt, purchase order, business card, lead form or resume. Inkfold reads it, cleans up the fields, shows you what it's unsure about and saves the contact, company, deal and note to HubSpot or Pipedrive, or a row to a Google Sheet. HubSpot can also go through an n8n workflow.
 </p>
 
 <p align="center">
@@ -12,8 +12,10 @@
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black&style=flat-square" alt="React 18" />
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
   <img src="https://img.shields.io/badge/HubSpot-CRM%20API-FF7A59?logo=hubspot&logoColor=white&style=flat-square" alt="HubSpot" />
+  <img src="https://img.shields.io/badge/Pipedrive-API%20v1-017737?style=flat-square" alt="Pipedrive" />
+  <img src="https://img.shields.io/badge/Google%20Sheets-API%20v4-34A853?logo=googlesheets&logoColor=white&style=flat-square" alt="Google Sheets" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-230%20passing-2ea44f?style=flat-square" alt="230 tests passing" />
+  <img src="https://img.shields.io/badge/tests-250%20passing-2ea44f?style=flat-square" alt="250 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -41,11 +43,11 @@
 
 ## 🧭 What is Inkfold?
 
-Copying details from PDFs and photos into a CRM is slow, and a model that does it unattended will sooner or later put a wrong amount on a deal. Inkfold keeps a person in the loop: the model extracts, code checks and normalizes, the person fixes what's flagged, and only then does anything reach HubSpot.
+Copying details from PDFs and photos into a CRM is slow, and a model that does it unattended will sooner or later put a wrong amount on a deal. Inkfold keeps a person in the loop: the model extracts, code checks and normalizes, the person fixes what's flagged, and only then does anything reach the CRM.
 
 | 📄 Reads | 🧹 Checks | 🔗 Saves |
 |---|---|---|
-| PDFs, PNG and JPEG photos and text files, with each field's source text and a confidence score | Emails, phone numbers (E.164), dates, money, currencies and domains, plus whether line items add up to the total | A contact (upserted by email), its company, a deal for an invoice and a note, all linked, in HubSpot |
+| Invoices, receipts, purchase orders, business cards, lead forms and resumes, as PDFs, photos or text files, with each field's source text and a confidence score | Emails, phone numbers (E.164), dates, money, currencies and domains, plus whether line items add up to the total | A contact (matched by email), its company, a deal for an invoice or purchase order and a note, all linked, in HubSpot or Pipedrive. Or one row per document in a Google Sheet |
 
 <p align="center">
   <picture>
@@ -87,12 +89,12 @@ To send records through n8n instead of straight to HubSpot, see [`n8n/README.md`
 **4. Tests**
 
 ```bash
-cd Backend && .venv/bin/python -m pytest      # 196 tests, real Postgres, fake Gemini and HubSpot
+cd Backend && .venv/bin/python -m pytest      # 240 tests, real Postgres, fake Gemini, HubSpot, Pipedrive and Sheets
 node --test n8n/test/*.test.mjs                # 10 tests for the n8n Code nodes
 Backend/.venv/bin/python n8n/test/e2e.py       # API + n8n + fake HubSpot round trip
 ```
 
-No test calls Gemini or HubSpot, so none of them need keys.
+No test calls Gemini, HubSpot, Pipedrive or Google, so none of them need keys.
 
 <details>
 <summary><b>🔧 Environment variables</b> (<code>Backend/.env</code>)</summary>
@@ -108,6 +110,11 @@ No test calls Gemini or HubSpot, so none of them need keys.
 | `HUBSPOT_PORTAL_ID` | no | Your HubSpot account ID, so the app can link to the records it made. |
 | `HUBSPOT_DEAL_STAGE` | no | Stage for new deals, by name or ID. Defaults to `closedwon`, since an invoice is a sale that happened. Newer HubSpot accounts use numeric stage IDs, so a name is looked up in the default pipeline. |
 | `N8N_WEBHOOK_URL` | no | When set, records go through the n8n workflow instead of straight to HubSpot. |
+| `PIPEDRIVE_API_TOKEN` | for Pipedrive | A personal API token (Pipedrive → **Personal preferences → API**). Adds Pipedrive to the team's choices. |
+| `PIPEDRIVE_DOMAIN` | no | Your company subdomain, as in `acme` for acme.pipedrive.com, so the app can link to the records it made. |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | for Sheets | The service account's JSON key, as one line. Adds Google Sheets to the team's choices. |
+| `GOOGLE_SHEETS_ID` | for Sheets | The sheet's ID, the long part of its address between `/d/` and `/edit`. Share the sheet with the service account's email as an editor. |
+| `GOOGLE_SHEETS_TAB` | no | The tab rows go in. Defaults to `Inkfold`, and is created with a header row if it isn't there. |
 | `N8N_SHARED_SECRET` | with n8n | Signs requests both ways. Use a long random string. |
 | `PUBLIC_API_URL` | with n8n | The address n8n can reach this API at, for its callback. |
 | `CORS_ALLOWED_ORIGINS` | prod | The deployed frontend's address, comma-separated if more than one. The first is also used for links in emails. |
@@ -139,7 +146,7 @@ Deals land in the default pipeline at the stage in `HUBSPOT_DEAL_STAGE`. Newer a
 <summary><b>🔑 Demo account</b> (live site)</summary>
 <br/>
 
-Click **Try the live demo**. You get a private account with three sample documents already read: an invoice, a business card and a lead form. Review them, fix the flagged phone number, and send one to HubSpot. Uploading your own file uses Gemini as normal.
+Click **Try the live demo**. You get a private account with three sample documents already read: an invoice, a business card and a lead form. Review them, fix the flagged phone number, and send one to the CRM. Uploading your own file uses Gemini as normal.
 
 Demo accounts are deleted after two days. Each address can open 10 demos an hour, and 500 can be opened a day in total.
 
@@ -204,8 +211,11 @@ The same HubSpot calls run either in the API or in an n8n workflow you can exten
 ### ✍️ Signed both ways
 Requests to n8n and its callbacks carry an HMAC-SHA256 signature over the timestamp and exact body, checked in constant time and refused after 5 minutes. A repeated callback changes nothing.
 
+### 🎯 HubSpot, Pipedrive or Google Sheets
+The team owner picks where documents go on the Team page, from whichever the server has keys for. Pipedrive gets a person, organization, a won deal for an invoice or purchase order, and a note, matched by email and name since it has no upsert. A sheet gets one row per document with the Inkfold ID in the first column, so sending again updates the same row even after the sheet is sorted. Values are written as plain text, so a document can't slip a formula into the sheet. A document already sent to one place can be sent to the new one after a switch.
+
 ### 👥 Teams
-Invite teammates by email to review the same documents and send them to the same HubSpot account. Everyone sees who added each document, who edited each field and who sent it. If two people edit the same document, the second save is refused rather than quietly overwriting the first, and "Load their version" brings in the newer copy with your changes still in place. Invite links are single use, tied to one email address, expire in 7 days and are stored only as hashes. Someone working alone who joins brings their documents along.
+Invite teammates by email to review the same documents and send them to the same destination. Everyone sees who added each document, who edited each field and who sent it. If two people edit the same document, the second save is refused rather than quietly overwriting the first, and "Load their version" brings in the newer copy with your changes still in place. Invite links are single use, tied to one email address, expire in 7 days and are stored only as hashes. Someone working alone who joins brings their documents along.
 
 ### 📚 Batch upload
 Drop up to 10 files at once. They're read two at a time, each with its own result, and "Next to review" walks you through whatever is still waiting.
@@ -237,13 +247,14 @@ Drop up to 10 files at once. They're read two at a time, each with its own resul
 | `POST` | `/api/intake/address` | Replace your intake address. The old one stops working. |
 | `POST` | `/api/intake/poll` | The scheduled check, with `Authorization: Bearer INTAKE_POLL_SECRET`. |
 | `GET` | `/api/documents/{id}/file` | The original upload, served sandboxed so it can't run as a page. |
-| `GET` | `/api/documents/{id}/matches` | The contact, company and deal already in HubSpot that a send would touch. |
+| `GET` | `/api/documents/{id}/matches` | The contact, company and deal already in HubSpot or Pipedrive that a send would touch. |
 | `GET` | `/api/documents`, `/api/documents/{id}` | List documents, or one with its fields, issues and sync history. |
-| `PATCH` | `/api/documents/{id}/fields` | Save edits, as `{"fields": {"contact.phone": "+1 617 555 0123"}, "base_updated_at": "..."}`. `409` if someone saved since `base_updated_at`. |
-| `POST` | `/api/documents/{id}/sync` | Send to HubSpot. `422` with the missing fields if it isn't ready. |
+| `PATCH` | `/api/documents/{id}/fields` | Save edits, as `{"fields": {"contact.phone": "+1 617 555 0123"}, "base_updated_at": "..."}`. Add `"doc_type": "receipt"` to correct the type. `409` if someone saved since `base_updated_at`. |
+| `POST` | `/api/documents/{id}/sync` | Send to the team's destination. `422` with the missing fields if it isn't ready. |
 | `POST` | `/api/sync/callback` | n8n's signed result. |
-| `DELETE` | `/api/documents/{id}` | Delete a document from Inkfold (not from HubSpot). |
+| `DELETE` | `/api/documents/{id}` | Delete a document from Inkfold (not from the CRM or sheet). |
 | `GET`, `PATCH` | `/api/team` | Your team, its people and open invites. `PATCH` renames it (owner only). |
+| `PATCH` | `/api/team/destination` | Choose HubSpot, Pipedrive or Google Sheets (owner only). `400` if the server isn't set up for it. |
 | `POST` | `/api/team/invites` | Invite an email. Returns the link, and emails it when SMTP is set. |
 | `DELETE` | `/api/team/invites/{id}`, `/api/team/members/{id}` | Cancel an invite, or remove someone (owner only). |
 | `POST` | `/api/team/leave` | Leave the team. What you added stays with it. |
@@ -253,9 +264,11 @@ Drop up to 10 files at once. They're read two at a time, each with its own resul
 
 - One contact per document. Inkfold reads a single person from each file.
 - Scanned PDFs work when Gemini can read them; there's no separate OCR step.
-- Deleting a document in Inkfold leaves its HubSpot records in place.
-- Deals use HubSpot's default pipeline.
-- A team has one owner, who can't hand the role over or leave. Everyone shares the one HubSpot account the server is set up with; there's no per-team HubSpot connection.
+- Deleting a document in Inkfold leaves its CRM records and sheet row in place.
+- Deals use HubSpot's default pipeline, and Pipedrive's default one. A job title goes in the Pipedrive note, since not every account has that field on people.
+- n8n only carries HubSpot sends. Pipedrive and Sheets are sent from the API.
+- Switching destinations doesn't move what was sent before. Each document remembers where it went.
+- A team has one owner, who can't hand the role over or leave. The destinations are the accounts the server is set up with; teams choose among them but can't connect their own.
 - An owner with teammates can't join another team until they've removed them. The demo can't invite or join.
 - The duplicate warning needs `HUBSPOT_TOKEN`. With n8n alone there's nothing to search HubSpot with, so it doesn't show.
 - A batch counts against the daily upload limit like single uploads, so the default of 10 per user is one full batch.
@@ -270,7 +283,7 @@ Drop up to 10 files at once. They're read two at a time, each with its own resul
 |---|---|
 | **Backend** | Python 3.12, FastAPI, psycopg 3, PyJWT, phonenumbers, google-auth |
 | **AI** | Google Gemini with structured JSON output and model fallback |
-| **CRM** | HubSpot CRM API v3 and v4 associations |
+| **CRM** | HubSpot CRM API v3 and v4 associations, Pipedrive API v1, Google Sheets API v4 with a service account |
 | **Automation** | n8n 2.x workflow with Code nodes and HMAC-signed webhooks |
 | **Frontend** | React 18, Vite, React Router |
 | **Data** | PostgreSQL on Neon |
@@ -292,17 +305,19 @@ Inkfold/
 │   │   ├── intake.py       email intake: addresses, parsing and IMAP
 │   │   ├── main.py         API routes, auth, uploads, rate limits
 │   │   ├── normalize.py    field cleaning and cross-checks
+│   │   ├── pipedrive.py    Pipedrive client: persons, organizations, deals, notes
 │   │   ├── schema.py       the fields Inkfold extracts
+│   │   ├── sheets.py       Google Sheets: service account sign-in, one row per document
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              220 tests against a real Postgres
+│   ├── tests/              240 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json
 ├── Frontend/
 │   ├── src/
-│   │   ├── components/     upload, email intake, original viewer, field rows, line items, HubSpot panel, Google button
+│   │   ├── components/     upload, email intake, original viewer, field rows, line items, send panel, Google button
 │   │   ├── pages/          landing, sign-in, password reset, account, team, join, documents, review
 │   │   ├── api.js          API client
 │   │   ├── highlight.js    finds each field's source text in the original
@@ -320,7 +335,7 @@ Inkfold/
 
 ## ☁️ Deployment & CI
 
-- **Vercel**, as two projects from this repo: `Backend` (serverless Python) and `Frontend` (Vite). Postgres is on Neon. Set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `HUBSPOT_TOKEN`, `HUBSPOT_PORTAL_ID` and `CORS_ALLOWED_ORIGINS` on the backend, and `VITE_API_URL` on the frontend. Create the tables once with `scripts/init_db.py`.
+- **Vercel**, as two projects from this repo: `Backend` (serverless Python) and `Frontend` (Vite). Postgres is on Neon. Set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `HUBSPOT_TOKEN`, `HUBSPOT_PORTAL_ID` and `CORS_ALLOWED_ORIGINS` on the backend, plus the Pipedrive and Google Sheets keys if you use them, and `VITE_API_URL` on the frontend. Create or update the tables with `scripts/init_db.py`, which is safe to run again after an upgrade.
 - **Email intake** (`intake.yml`) calls `/api/intake/poll` every 10 minutes. Set the `INKFOLD_API_URL` repository variable and the `INTAKE_POLL_SECRET` secret, the same value as on the backend. Until both are set, it does nothing.
 - **CI** (`ci.yml`) runs the backend tests, the n8n Code node tests, a check that the workflow JSON matches its source files, and the frontend build on every push and pull request.
 

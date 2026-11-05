@@ -7,7 +7,7 @@ import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import httpx
 import jwt
@@ -20,11 +20,13 @@ from pydantic import AfterValidator, BaseModel, EmailStr, Field
 from . import demo_data
 from .config import load_settings
 from .crm import CrmError, HubSpot
+from .pipedrive import Pipedrive
+from .sheets import GoogleSheets
 from .extract import ExtractionFailed, ExtractionUnavailable, extract_document
 from .intake import MAX_FILES_PER_EMAIL, ImapMailbox, address_for, new_token, parse_message, token_for
 from .mailer import smtp_sender
-from .normalize import apply_edits, missing_for_sync, normalize_fields, to_crm_record
-from .schema import FIELDS
+from .normalize import apply_edits, complete, missing_for_sync, normalize_fields, to_crm_record
+from .schema import DOC_TYPES, FIELDS
 from .store import SYNC_STALE_AFTER, Store
 from .sync import SIGNATURE_HEADER, TIMESTAMP_HEADER, SyncError, build_n8n_payload, parse_callback, send_to_n8n, verify_signature
 
@@ -37,7 +39,6 @@ MAX_FIELD_LENGTH = 2000
 BUSY = "Too many requests. Please try again in a little while."
 AI_BUSY = "The AI service is busy right now. Please try again in a little while."
 WRONG_TYPE = "Upload a PDF, PNG, JPG or TXT file."
-NEEDS_EMAIL = "Add a valid email before sending to HubSpot."
 # Each document can take up to 40 seconds with Gemini, so one check stays well inside Vercel's 300.
 MAX_DOCUMENTS_PER_CHECK = MAX_FILES_PER_EMAIL
 INBOX_DOWN = "Couldn't reach the intake inbox. Please try again in a little while."
@@ -65,6 +66,10 @@ RATE_LIMITS = {
     "invite_view": (60, timedelta(hours=1), BUSY),
     "team_change": (20, timedelta(hours=1), BUSY),
 }
+# Where documents can go. The server's settings say which are set up, and each team picks one.
+DESTINATIONS = {"hubspot": "HubSpot", "pipedrive": "Pipedrive", "sheets": "Google Sheets"}
+# A CRM matches people by email, so it needs one. A sheet takes whatever was read.
+CRM_DESTINATIONS = ("hubspot", "pipedrive")
 EDIT_CONFLICT = "Someone else saved this document while you were editing."
 JOIN_PROBLEMS = {
     "invalid": (404, "This invite is invalid or has expired. Ask for a new one."),
@@ -136,6 +141,8 @@ class FieldEdits(BaseModel):
     fields: dict[str, Any] = Field(max_length=len(FIELDS))
     # The version the edits were made on. A newer saved version means a teammate got there first.
     base_updated_at: datetime | None = None
+    # When the AI picked the wrong kind of document.
+    doc_type: Literal[DOC_TYPES] | None = None
 
 
 class TeamName(BaseModel):
@@ -144,6 +151,10 @@ class TeamName(BaseModel):
 
 class Invite(BaseModel):
     email: EmailStr
+
+
+class Destination(BaseModel):
+    destination: Literal[tuple(DESTINATIONS)]
 
 
 def sniff_mime(data, filename):
@@ -199,7 +210,16 @@ def is_stale_sync(document):
     return document["status"] == "syncing" and document["updated_at"] < datetime.now(timezone.utc) - SYNC_STALE_AFTER
 
 
-def public_document(document, events=None):
+def sent_to(crm):
+    """Where a document's saved records are. Records from before there was a choice are HubSpot's."""
+    return (crm.get("destination") or "hubspot") if crm else None
+
+
+def needs_for(fields, destination):
+    return missing_for_sync(fields) if destination in CRM_DESTINATIONS else []
+
+
+def public_document(document, events=None, destination=None):
     summary = {
         key: document[key]
         for key in ("id", "filename", "mime", "size", "doc_type", "status", "error", "source", "created_at", "updated_at", "added_by")
@@ -208,22 +228,35 @@ def public_document(document, events=None):
     summary["title"] = title_of(document)
     if events is None:
         return summary
-    missing = missing_for_sync(document["fields"])
-    ready = document["status"] in ("needs_review", "sync_failed") or is_stale_sync(document)
+    fields = complete(document["fields"])
+    missing = needs_for(fields, destination)
+    # Sent before, but somewhere other than where the team sends now, so it can go there too.
+    elsewhere = document["status"] == "synced" and sent_to(document["crm"]) != destination
+    ready = document["status"] in ("needs_review", "sync_failed") or is_stale_sync(document) or elsewhere
     return {
         **summary,
-        "fields": document["fields"],
-        "crm": document["crm"],
+        "fields": fields,
+        "crm": {**document["crm"], "destination": sent_to(document["crm"])} if document["crm"] else None,
+        "destination": {"key": destination, "label": DESTINATIONS.get(destination)} if destination else None,
         "missing": missing,
-        "can_sync": ready and not missing,
+        "can_sync": bool(destination) and ready and not missing,
         "sync_events": [{**event, "id": str(event["id"])} for event in events],
     }
 
 
-def crm_summary(crm):
-    parts = [f"contact {crm['contact_id']}"] if crm.get("contact_id") else []
-    parts += [f"{name} {crm[key]}" for key, name in (("company_id", "company"), ("deal_id", "deal"), ("note_id", "note")) if crm.get(key)]
-    return "Saved in HubSpot: " + ", ".join(parts) + "." if parts else "Saved in HubSpot."
+RECORD_NAMES = {
+    "hubspot": ("contact", "company", "deal", "note"),
+    "pipedrive": ("person", "organization", "deal", "note"),
+}
+
+
+def crm_summary(crm, destination="hubspot"):
+    if destination == "sheets":
+        return f"Saved to Google Sheets, row {crm['row']}."
+    label = DESTINATIONS[destination]
+    keys = ("contact_id", "company_id", "deal_id", "note_id")
+    parts = [f"{name} {crm[key]}" for key, name in zip(keys, RECORD_NAMES[destination]) if crm.get(key)]
+    return f"Saved in {label}: " + ", ".join(parts) + "." if parts else f"Saved in {label}."
 
 
 def parse_id(value):
@@ -322,8 +355,25 @@ def create_app(
             raise HTTPException(status_code=404, detail="Document not found.")
         return document
 
+    def destinations():
+        found = []
+        if settings["hubspot_token"] or settings["n8n_webhook_url"]:
+            found.append("hubspot")
+        if settings.get("pipedrive_token"):
+            found.append("pipedrive")
+        if settings.get("sheets"):
+            found.append("sheets")
+        return found
+
+    def destination_of(team):
+        options = destinations()
+        if team and team["destination"] in options:
+            return team["destination"]
+        return options[0] if options else None
+
     def full(document):
-        return public_document(document, store.sync_events(document["id"]))
+        destination = destination_of(store.team(document["team_id"]))
+        return public_document(document, store.sync_events(document["id"]), destination)
 
     @app.get("/api/health")
     def health():
@@ -630,13 +680,16 @@ def create_app(
             check_edit(key, value)
         if body.base_updated_at and body.base_updated_at != document["updated_at"]:
             raise HTTPException(status_code=409, detail=EDIT_CONFLICT)
-        fields = apply_edits(document["fields"], body.fields, editor=user["email"])
+        fields = apply_edits(complete(document["fields"]), body.fields, editor=user["email"])
+        changes = {"fields": fields}
+        if body.doc_type and body.doc_type != document["doc_type"]:
+            changes["doc_type"] = body.doc_type
         # A changed document can be sent again, which updates the same HubSpot records.
         allowed = ("needs_review", "failed", "synced", "sync_failed") + (("syncing",) if is_stale_sync(document) else ())
         # Checked again as part of the update, so two saves at the same moment can't both win.
         updated = store.update_document(
             document["id"], only_if_status=allowed, only_if_updated_at=document["updated_at"],
-            fields=fields, status="needs_review", error=None,
+            status="needs_review", error=None, **changes,
         )
         if updated is None:
             latest = store.get_document(document["id"])
@@ -654,50 +707,83 @@ def create_app(
             base_url=settings.get("hubspot_base_url") or None,
         )
 
+    def pipedrive_client():
+        return Pipedrive(
+            settings["pipedrive_token"],
+            domain=settings.get("pipedrive_domain") or None,
+            client=http,
+            base_url=settings.get("pipedrive_base_url") or None,
+        )
+
+    sheets_clients = []
+
+    def sheets_client():
+        # Kept, so its Google access token is reused for an hour instead of fetched on every send.
+        if not sheets_clients:
+            sheet = settings["sheets"]
+            try:
+                sheets_clients.append(GoogleSheets(
+                    sheet["service_account"], sheet["spreadsheet_id"], sheet.get("tab") or "Inkfold", client=http,
+                    base_url=sheet.get("base_url"), token_url=sheet.get("token_url"),
+                ))
+            except (ValueError, KeyError, TypeError):
+                raise CrmError("GOOGLE_SERVICE_ACCOUNT_JSON isn't a service account key. Paste the whole JSON file.")
+        return sheets_clients[0]
+
     @app.get("/api/documents/{document_id}/matches")
     def crm_matches(document_id: str, user=Depends(current_user)):
-        """What's already in HubSpot for this document, so the reviewer knows before sending."""
+        """What the CRM already has for this document, so the reviewer knows before sending."""
         document = own_document(document_id, user)
-        # Through n8n alone there's no token to search with.
-        if not settings["hubspot_token"]:
+        destination = destination_of(store.team(user["team_id"]))
+        # Through n8n alone there's no HubSpot token to search with, and a sheet has nothing to match.
+        if destination == "hubspot" and settings["hubspot_token"]:
+            lookup = hubspot_client
+        elif destination == "pipedrive":
+            lookup = pipedrive_client
+        else:
             return {"available": False}
         enforce_limit("crm_lookup", user["id"])
         try:
-            found = hubspot_client().find_matches(to_crm_record(document["fields"], document["doc_type"]))
+            found = lookup().find_matches(to_crm_record(document["fields"], document["doc_type"]))
         except CrmError as error:
-            logger.warning("HubSpot look-up failed: %s", error.message)
+            logger.warning("%s look-up failed: %s", DESTINATIONS[destination], error.message)
             return {"available": False}
         # Records this document made itself are the ones a resend updates, so they aren't a surprise.
-        crm = document["crm"] or {}
+        crm = document["crm"] if sent_to(document["crm"]) == destination else {}
         for kind, match in found.items():
             if match:
                 match["own"] = match["id"] == str(crm.get(f"{kind}_id") or "")
-        return {"available": True, **found}
+        return {"available": True, "destination": destination, **found}
 
     @app.post("/api/documents/{document_id}/sync")
     def sync(document_id: str, user=Depends(current_user)):
         document = own_document(document_id, user)
-        missing = missing_for_sync(document["fields"])
+        destination = destination_of(store.team(user["team_id"]))
+        if destination is None:
+            raise HTTPException(status_code=503, detail="Nothing to send to yet. Connect HubSpot, Pipedrive or Google Sheets.")
+        label = DESTINATIONS[destination]
+        fields = complete(document["fields"])
+        missing = needs_for(fields, destination)
         if missing:
-            return JSONResponse(status_code=422, content={"detail": NEEDS_EMAIL, "missing": missing})
-        use_n8n = bool(settings["n8n_webhook_url"])
-        if not use_n8n and not settings["hubspot_token"]:
-            raise HTTPException(status_code=503, detail="HubSpot isn't connected yet.")
+            return JSONResponse(status_code=422, content={"detail": f"Add a valid email before sending to {label}.", "missing": missing})
         if document["status"] == "failed":
             raise HTTPException(status_code=409, detail="Check the fields and save them before sending.")
-        if document["status"] == "synced":
-            raise HTTPException(status_code=409, detail="This is already in HubSpot. Change a field to send it again.")
+        same_place = sent_to(document["crm"]) == destination
+        if document["status"] == "synced" and same_place:
+            raise HTTPException(status_code=409, detail=f"This is already in {label}. Change a field to send it again.")
         enforce_limit("sync_user", user["id"])
-        if not store.claim_sync(document["id"]):
-            raise HTTPException(status_code=409, detail="This document is already being sent to HubSpot.")
+        if not store.claim_sync(document["id"], allow_synced=not same_place):
+            raise HTTPException(status_code=409, detail=f"This document is already being sent to {label}.")
+        # Records in another destination can't be updated here, so this send starts fresh.
+        existing = document["crm"] if same_place else None
 
-        record = to_crm_record(document["fields"], document["doc_type"])
+        record = to_crm_record(fields, document["doc_type"])
         source_note = f"Imported by Inkfold from {document['filename']}."
         record["note"] = f"{record['note']}\n\n{source_note}" if record["note"] else source_note
 
-        if use_n8n:
+        if destination == "hubspot" and settings["n8n_webhook_url"]:
             payload = build_n8n_payload(
-                str(document["id"]), record, settings["public_api_url"] + "/api/sync/callback", document["crm"]
+                str(document["id"]), record, settings["public_api_url"] + "/api/sync/callback", existing
             )
             store.add_sync_event(document["id"], "n8n", "sent", "Sent to the n8n workflow.", actor=user["email"])
             try:
@@ -707,13 +793,20 @@ def create_app(
                 store.update_document(document["id"], status="sync_failed", error=str(error))
             return full(store.get_document(document["id"]))
 
+        channel = "direct" if destination == "hubspot" else destination
         try:
-            crm = hubspot_client().push(record, existing=document["crm"])
+            if destination == "hubspot":
+                crm = hubspot_client().push(record, existing=existing)
+            elif destination == "pipedrive":
+                crm = pipedrive_client().push(record, existing=existing)
+            else:
+                crm = sheets_client().push(document, fields)
         except CrmError as error:
-            store.add_sync_event(document["id"], "direct", "failed", error.message, actor=user["email"])
+            store.add_sync_event(document["id"], channel, "failed", error.message, actor=user["email"])
             store.update_document(document["id"], status="sync_failed", error=error.message)
         else:
-            store.add_sync_event(document["id"], "direct", "synced", crm_summary(crm), actor=user["email"])
+            crm = {**crm, "destination": destination}
+            store.add_sync_event(document["id"], channel, "synced", crm_summary(crm, destination), actor=user["email"])
             store.update_document(document["id"], status="synced", crm=crm, error=None)
         return full(store.get_document(document["id"]))
 
@@ -737,6 +830,7 @@ def create_app(
         # Only a document still waiting is changed, so a repeated callback does nothing.
         if result.status == "synced":
             crm = {key: result.crm.get(key) for key in ("contact_id", "company_id", "deal_id", "note_id", "contact_url", "deal_url")}
+            crm["destination"] = "hubspot"
             applied = store.update_document(document_id, only_if_status=("syncing",), status="synced", crm=crm, error=None)
             detail = crm_summary(crm)
         else:
@@ -762,6 +856,8 @@ def create_app(
             ],
             "invites": [{**i, "id": str(i["id"])} for i in store.team_invites(user["team_id"])] if owner else [],
             "email_invites": send_email is not None,
+            "destination": destination_of(team),
+            "destinations": [{"key": key, "label": DESTINATIONS[key]} for key in destinations()],
         }
 
     def need_owner(user):
@@ -778,6 +874,15 @@ def create_app(
     def rename_team(body: TeamName, user=Depends(current_user)):
         need_owner(user)
         store.rename_team(user["team_id"], body.name.strip())
+        return team_view(user)
+
+    @app.patch("/api/team/destination")
+    def choose_destination(body: Destination, user=Depends(current_user)):
+        if user["team_role"] != "owner":
+            raise HTTPException(status_code=403, detail="Only the team's owner can do that.")
+        if body.destination not in destinations():
+            raise HTTPException(status_code=400, detail=f"{DESTINATIONS[body.destination]} isn't set up on this server.")
+        store.set_destination(user["team_id"], body.destination)
         return team_view(user)
 
     @app.post("/api/team/invites", status_code=201)

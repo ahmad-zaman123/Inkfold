@@ -117,6 +117,8 @@ ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_user_id_sha256_key;
 CREATE UNIQUE INDEX IF NOT EXISTS documents_team_file_idx ON documents (team_id, sha256);
 CREATE INDEX IF NOT EXISTS documents_team_idx ON documents (team_id, created_at DESC);
 ALTER TABLE sync_events ADD COLUMN IF NOT EXISTS actor TEXT NOT NULL DEFAULT '';
+-- Where the team sends documents: hubspot, pipedrive or sheets. Empty means the first one the server has.
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS destination TEXT NOT NULL DEFAULT '';
 CREATE TABLE IF NOT EXISTS team_invites (
     id UUID PRIMARY KEY,
     token_hash TEXT NOT NULL UNIQUE,
@@ -310,13 +312,17 @@ class Store:
 
     def team(self, team_id):
         with self._connect() as db:
-            return db.execute("SELECT id, name FROM teams WHERE id = %s", (team_id,)).fetchone()
+            return db.execute("SELECT id, name, destination FROM teams WHERE id = %s", (team_id,)).fetchone()
 
     def team_members(self, team_id):
         with self._connect() as db:
             return db.execute(
                 f"SELECT {MEMBER_COLUMNS} FROM users WHERE team_id = %s ORDER BY team_role DESC, created_at, email", (team_id,)
             ).fetchall()
+
+    def set_destination(self, team_id, destination):
+        with self._connect() as db:
+            db.execute("UPDATE teams SET destination = %s WHERE id = %s", (destination, team_id))
 
     def rename_team(self, team_id, name):
         with self._connect() as db:
@@ -542,16 +548,18 @@ class Store:
                 {**values, "id": document_id, "only_if_status": list(only_if_status or ()), "only_if_updated_at": only_if_updated_at},
             ).fetchone()
 
-    def claim_sync(self, document_id):
+    def claim_sync(self, document_id, allow_synced=False):
         """Marks the document as being sent. False if another send is already under way.
 
-        Done in one statement so two clicks at once can't both reach HubSpot.
+        Done in one statement so two clicks at once can't both reach HubSpot. `allow_synced` lets a document
+        already sent somewhere else go to a new destination.
         """
+        ready = ["needs_review", "sync_failed"] + (["synced"] if allow_synced else [])
         with self._connect() as db:
             row = db.execute(
                 "UPDATE documents SET status = 'syncing', error = NULL, updated_at = now() WHERE id = %s "
-                "AND (status IN ('needs_review', 'sync_failed') OR (status = 'syncing' AND updated_at < %s)) RETURNING id",
-                (document_id, datetime.now(timezone.utc) - SYNC_STALE_AFTER),
+                "AND (status = ANY(%s) OR (status = 'syncing' AND updated_at < %s)) RETURNING id",
+                (document_id, ready, datetime.now(timezone.utc) - SYNC_STALE_AFTER),
             ).fetchone()
         return row is not None
 

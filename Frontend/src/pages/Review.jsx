@@ -5,7 +5,7 @@ import FieldRow from '../components/FieldRow.jsx'
 import LineItems from '../components/LineItems.jsx'
 import Original from '../components/Original.jsx'
 import SyncPanel from '../components/SyncPanel.jsx'
-import { DOC_TYPES, GROUPS, inTeam, who } from '../labels.js'
+import { DOC_TYPES, groupsFor, inTeam, labelFor, who } from '../labels.js'
 import { marksFor } from '../highlight.js'
 
 const POLL_MS = 2000
@@ -40,6 +40,8 @@ function Review({ id, user }) {
   const location = useLocation()
   const [document, setDocument] = useState(null)
   const [values, setValues] = useState({})
+  // The kind of document, which the reviewer can correct. Saved together with the fields.
+  const [docType, setDocType] = useState(null)
   const [loadError, setLoadError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -58,6 +60,7 @@ function Review({ id, user }) {
   const show = useCallback((next) => {
     setDocument(next)
     setValues(valuesOf(next))
+    setDocType(next.doc_type)
   }, [])
 
   useEffect(() => {
@@ -102,7 +105,9 @@ function Review({ id, user }) {
   const marks = useMemo(() => (fieldsKey ? marksFor(JSON.parse(fieldsKey)) : []), [fieldsKey])
 
   const dirtyKeys = useMemo(() => (document ? changedKeys(document, values) : []), [document, values])
-  const dirty = dirtyKeys.length > 0
+  const typeChanged = Boolean(document && docType && docType !== document.doc_type)
+  const changeCount = dirtyKeys.length + (typeChanged ? 1 : 0)
+  const dirty = changeCount > 0
 
   useEffect(() => {
     if (!dirty) return undefined
@@ -123,8 +128,7 @@ function Review({ id, user }) {
 
   const queue = nextToReview(others, document)
   const locked = document.status === 'syncing' && !document.can_sync
-  const hasInvoice = document.doc_type === 'invoice' || GROUPS[2].keys.some((key) => document.fields[key].value !== null)
-  const groups = GROUPS.filter((group) => group.title !== 'Invoice' || hasInvoice)
+  const groups = groupsFor(docType || document.doc_type, document.fields)
   const toCheck = Object.values(document.fields).filter((f) => f.value !== null && !f.edited && (f.issues.length || f.confidence < 0.7)).length
 
   const fieldOf = (target) => target.closest?.('[data-field]')?.dataset.field ?? null
@@ -141,7 +145,9 @@ function Review({ id, user }) {
     setConflict(false)
     setNotice('')
     try {
-      show(await api.saveFields(id, Object.fromEntries(dirtyKeys.map((key) => [key, values[key]])), document.updated_at))
+      show(await api.saveFields(
+        id, Object.fromEntries(dirtyKeys.map((key) => [key, values[key]])), document.updated_at, typeChanged ? docType : undefined,
+      ))
     } catch (err) {
       setSaveError(err.message)
       setConflict(err.status === 409 && err.message.startsWith('Someone else'))
@@ -157,6 +163,7 @@ function Review({ id, user }) {
       const mine = Object.fromEntries(dirtyKeys.map((key) => [key, values[key]]))
       setDocument(latest)
       setValues({ ...valuesOf(latest), ...mine })
+      if (!typeChanged) setDocType(latest.doc_type)
       setConflict(false)
       setSaveError('')
       setNotice("Loaded the latest version. Your unsaved changes are still in the form, so check them and save.")
@@ -178,7 +185,7 @@ function Review({ id, user }) {
   }
 
   async function remove() {
-    if (!window.confirm(`Delete ${document.filename}? This doesn't touch anything already in HubSpot.`)) return
+    if (!window.confirm(`Delete ${document.filename}? This doesn't touch anything already sent to ${document.destination?.label || 'your CRM'}.`)) return
     try {
       await api.remove(id)
       navigate('/')
@@ -201,7 +208,12 @@ function Review({ id, user }) {
         <div>
           <h1>{document.title}</h1>
           <p className="doc-meta">
-            {DOC_TYPES[document.doc_type]} · {document.filename}
+            <label className="visually-hidden" htmlFor="doc-type">Kind of document</label>
+            <select id="doc-type" className="type-select" value={docType || document.doc_type} disabled={locked}
+              onChange={(e) => setDocType(e.target.value)}>
+              {Object.entries(DOC_TYPES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </select>
+            {' · '}{document.filename}
             {inTeam(user) && document.added_by && ` · added by ${who(document.added_by, user)}`}
           </p>
           {document.source?.via === 'email' && (
@@ -240,21 +252,21 @@ function Review({ id, user }) {
                   <LineItems key={key} field={document.fields[key]} items={values[key]} disabled={locked}
                     onChange={(items) => setValues({ ...values, [key]: items.length ? items : null })} />
                 ) : (
-                  <FieldRow key={key} name={key} field={document.fields[key]} value={values[key]} disabled={locked} user={user}
+                  <FieldRow key={key} name={key} label={labelFor(key, docType || document.doc_type)} field={document.fields[key]} value={values[key]} disabled={locked} user={user}
                     onChange={(value) => setValues({ ...values, [key]: value })} />
                 ),
               )}
             </fieldset>
           ))}
           <div className={`savebar${dirty ? ' visible' : ''}`} aria-hidden={!dirty}>
-            <span>{dirtyKeys.length === 1 ? '1 unsaved change' : `${dirtyKeys.length} unsaved changes`}</span>
+            <span>{changeCount === 1 ? '1 unsaved change' : `${changeCount} unsaved changes`}</span>
             {saveError && (
               <span className="savebar-error" role="alert">
                 {saveError}
                 {conflict && <> <button type="button" className="link-button" onClick={loadLatest}>Load their version</button></>}
               </span>
             )}
-            <button type="button" className="button subtle" onClick={() => setValues(valuesOf(document))} disabled={saving || !dirty} tabIndex={dirty ? 0 : -1}>
+            <button type="button" className="button subtle" onClick={() => { setValues(valuesOf(document)); setDocType(document.doc_type) }} disabled={saving || !dirty} tabIndex={dirty ? 0 : -1}>
               Discard
             </button>
             <button type="submit" className="button primary" disabled={saving || !dirty} tabIndex={dirty ? 0 : -1}>

@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 
 import phonenumbers
 
-from .schema import EDITED_SOURCE, FIELDS, REQUIRED_FOR_SYNC
+from .schema import DEAL_TYPES, EDITED_SOURCE, FIELDS, MONEY_TYPES, REQUIRED_FOR_SYNC
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$")
 DOMAIN_RE = re.compile(r"^(?=.{4,253}$)([a-z0-9-]+\.)+[a-z]{2,}$")
@@ -239,6 +239,14 @@ def _check_invoice(fields):
             due["issues"].append("The due date is before the issue date.")
 
 
+EMPTY_FIELD = {"value": None, "confidence": 0.0, "source": "", "issues": [], "edited": False}
+
+
+def complete(fields):
+    """Every field in FIELDS, so documents saved before a field was added still have it, empty."""
+    return {key: fields.get(key) or dict(EMPTY_FIELD, issues=[]) for key in FIELDS}
+
+
 def apply_edits(fields, edits, editor=""):
     """Applies the user's changes, then checks every field again so cross-field problems update too.
 
@@ -273,8 +281,12 @@ def _line_items_summary(items, currency):
     return "Line items:\n" + "\n".join(lines)
 
 
+DEAL_PREFIX = {"invoice": "Invoice", "purchase_order": "PO"}
+
+
 def to_crm_record(fields, doc_type):
     """The one payload both the direct HubSpot client and the n8n workflow send."""
+    fields = complete(fields)
     email = _value(fields, "contact.email")
     contact = {"email": email}
     for key, prop in (
@@ -300,9 +312,10 @@ def to_crm_record(fields, doc_type):
     currency = _value(fields, "invoice.currency")
     deal = None
     total = _value(fields, "invoice.total")
-    if doc_type == "invoice" and total and not fields["invoice.total"]["issues"]:
+    if doc_type in DEAL_TYPES and total and not fields["invoice.total"]["issues"]:
         number = _value(fields, "invoice.number")
-        title = "Invoice " + number if number else "Invoice"
+        prefix = DEAL_PREFIX[doc_type]
+        title = f"{prefix} {number}" if number else prefix
         if name:
             title += " — " + name
         deal = {"dealname": title, "amount": total}
@@ -317,7 +330,20 @@ def to_crm_record(fields, doc_type):
     note_parts = []
     if _value(fields, "notes"):
         note_parts.append(_value(fields, "notes"))
-    if doc_type == "invoice" and _value(fields, "invoice.line_items"):
+    # HubSpot has no standard place for these, so they go in the note where a person will see them.
+    details = [
+        f"{label}: {_value(fields, key)}"
+        for key, label in (("contact.location", "Location"), ("contact.linkedin", "LinkedIn"), ("resume.skills", "Skills"))
+        if _value(fields, key)
+    ]
+    if doc_type == "receipt":
+        number, paid, method = (_value(fields, k) for k in ("invoice.number", "invoice.issue_date", "invoice.payment_method"))
+        if total:
+            details.insert(0, f"Receipt{' ' + number if number else ''}: {currency + ' ' if currency else ''}{_format_amount(total)}"
+                              f"{' paid ' + paid if paid else ''}{' by ' + method if method else ''}")
+    if details:
+        note_parts.append("\n".join(details))
+    if doc_type in MONEY_TYPES and _value(fields, "invoice.line_items"):
         note_parts.append(_line_items_summary(_value(fields, "invoice.line_items"), currency))
     note = "\n\n".join(note_parts) or None
 

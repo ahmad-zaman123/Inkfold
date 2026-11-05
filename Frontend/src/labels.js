@@ -1,27 +1,60 @@
 export const DOC_TYPES = {
   invoice: 'Invoice',
+  receipt: 'Receipt',
+  purchase_order: 'Purchase order',
   business_card: 'Business card',
   lead_form: 'Lead form',
+  resume: 'Resume',
   other: 'Other document',
 }
+
+const MONEY_TYPES = ['invoice', 'receipt', 'purchase_order']
 
 export const STATUSES = {
   needs_review: { label: 'Needs review', tone: 'info' },
   failed: { label: "Couldn't read", tone: 'error' },
   syncing: { label: 'Sending', tone: 'busy' },
-  synced: { label: 'In HubSpot', tone: 'ok' },
+  synced: { label: 'Sent', tone: 'ok' },
   sync_failed: { label: 'Send failed', tone: 'error' },
 }
 
-export const GROUPS = [
-  { title: 'Contact', keys: ['contact.first_name', 'contact.last_name', 'contact.email', 'contact.phone', 'contact.job_title'] },
-  { title: 'Company', keys: ['company.name', 'company.domain', 'company.address'] },
-  {
-    title: 'Invoice',
-    keys: ['invoice.number', 'invoice.issue_date', 'invoice.due_date', 'invoice.currency', 'invoice.total', 'invoice.line_items'],
-  },
-  { title: 'Notes', keys: ['notes'] },
-]
+const MONEY_TITLES = { invoice: 'Invoice', receipt: 'Receipt', purchase_order: 'Purchase order' }
+const CANDIDATE_KEYS = ['contact.location', 'contact.linkedin', 'resume.skills']
+
+// The groups of fields the review page shows for a kind of document. A field outside its usual
+// document type still shows when it has a value, so nothing read is ever hidden.
+export function groupsFor(docType, fields) {
+  const has = (key) => fields[key]?.value !== null && fields[key]?.value !== undefined
+  const keep = (keys, usual) => keys.filter((key) => usual || has(key))
+  const money = MONEY_TYPES.includes(docType)
+  const groups = [
+    { title: docType === 'resume' ? 'Candidate' : 'Contact', keys: ['contact.first_name', 'contact.last_name', 'contact.email', 'contact.phone', 'contact.job_title'] },
+    { title: docType === 'receipt' ? 'Paid to' : docType === 'resume' ? 'Current employer' : 'Company', keys: ['company.name', 'company.domain', 'company.address'] },
+    {
+      title: MONEY_TITLES[docType] || 'Invoice',
+      keys: [
+        ...keep(['invoice.number', 'invoice.issue_date'], money),
+        ...keep(['invoice.due_date'], money && docType !== 'receipt'),
+        ...keep(['invoice.currency', 'invoice.total'], money),
+        ...keep(['invoice.payment_method'], docType === 'receipt'),
+        ...keep(['invoice.line_items'], money),
+      ],
+    },
+    { title: docType === 'resume' ? 'Resume' : 'More details', keys: keep(CANDIDATE_KEYS, docType === 'resume') },
+    { title: 'Notes', keys: ['notes'] },
+  ]
+  return groups.filter((group) => group.keys.length)
+}
+
+const TYPE_LABELS = {
+  receipt: { 'invoice.number': 'Receipt number', 'invoice.issue_date': 'Date paid' },
+  purchase_order: { 'invoice.number': 'PO number', 'invoice.issue_date': 'Order date', 'invoice.due_date': 'Delivery date' },
+  resume: { 'contact.job_title': 'Current role' },
+}
+
+export function labelFor(key, docType) {
+  return TYPE_LABELS[docType]?.[key] || FIELD_LABELS[key]
+}
 
 export const FIELD_LABELS = {
   'contact.first_name': 'First name',
@@ -29,6 +62,8 @@ export const FIELD_LABELS = {
   'contact.email': 'Email',
   'contact.phone': 'Phone',
   'contact.job_title': 'Job title',
+  'contact.location': 'Location',
+  'contact.linkedin': 'LinkedIn',
   'company.name': 'Company',
   'company.domain': 'Website',
   'company.address': 'Address',
@@ -37,7 +72,9 @@ export const FIELD_LABELS = {
   'invoice.due_date': 'Due date',
   'invoice.currency': 'Currency',
   'invoice.total': 'Total',
+  'invoice.payment_method': 'Paid with',
   'invoice.line_items': 'Line items',
+  'resume.skills': 'Skills',
   notes: 'Notes',
 }
 
@@ -48,6 +85,9 @@ export const PLACEHOLDERS = {
   'invoice.due_date': 'YYYY-MM-DD',
   'invoice.currency': 'USD',
   'invoice.total': '0.00',
+  'contact.linkedin': 'linkedin.com/in/name',
+  'resume.skills': 'Python, SQL, project management',
+  'invoice.payment_method': 'Visa ending 4242',
 }
 
 // Below this the review screen asks the user to check the value.

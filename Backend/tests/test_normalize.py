@@ -206,3 +206,34 @@ def test_crm_record_without_company_or_deal():
 def test_no_deal_when_the_total_has_a_problem():
     fields = apply_edits(invoice_fields(), {"invoice.total": "1250"})
     assert to_crm_record(fields, "invoice")["deal"] is None
+
+
+def test_a_purchase_order_becomes_a_deal_named_after_the_po():
+    fields = normalize_fields(raw(contact__email="buyer@acme.example", company__name="Acme", invoice__number="PO-4512",
+                                  invoice__total="$2,400.00", invoice__due_date="2026-12-01"))
+    deal = to_crm_record(fields, "purchase_order")["deal"]
+    assert deal["dealname"] == "PO PO-4512 — Acme" and deal["amount"] == "2400.00" and deal["closedate"] == "2026-12-01"
+
+
+def test_a_receipt_records_the_payment_in_the_note_not_a_deal():
+    fields = normalize_fields(raw(contact__email="shop@cafe.example", company__name="Corner Cafe", invoice__number="8812",
+                                  invoice__total="€18.40", invoice__issue_date="2026-11-03", invoice__payment_method="Visa ending 4242"))
+    record = to_crm_record(fields, "receipt")
+    assert record["deal"] is None
+    assert record["note"].startswith("Receipt 8812: EUR 18.40 paid 2026-11-03 by Visa ending 4242")
+
+
+def test_a_resume_keeps_location_linkedin_and_skills_in_the_note():
+    fields = normalize_fields(raw(contact__first_name="Ayesha", contact__email="ayesha@mail.example", contact__job_title="Data engineer",
+                                  contact__location="Lahore, Pakistan", contact__linkedin="linkedin.com/in/ayesha",
+                                  resume__skills="Python, Airflow, dbt"))
+    record = to_crm_record(fields, "resume")
+    assert record["contact"]["jobtitle"] == "Data engineer" and record["deal"] is None
+    assert record["note"] == "Location: Lahore, Pakistan\nLinkedIn: linkedin.com/in/ayesha\nSkills: Python, Airflow, dbt"
+
+
+def test_documents_saved_before_a_field_existed_still_make_a_record():
+    fields = normalize_fields(raw(contact__email="old@x.example"))
+    for key in ("contact.location", "contact.linkedin", "invoice.payment_method", "resume.skills"):
+        del fields[key]
+    assert to_crm_record(fields, "invoice")["contact"] == {"email": "old@x.example"}

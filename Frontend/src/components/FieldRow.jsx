@@ -10,7 +10,7 @@ function Confidence({ field, user }) {
   return <span className="badge">{Math.round(field.confidence * 100)}% sure</span>
 }
 
-export default function FieldRow({ name, field, value, onChange, disabled, user }) {
+export default function FieldRow({ name, label, field, value, onChange, disabled, user }) {
   const id = `field-${name.replace('.', '-')}`
   const notes = name === 'notes'
   const describedBy = [field.source && !field.edited && `${id}-source`, field.issues.length && `${id}-issues`].filter(Boolean).join(' ')
@@ -26,7 +26,7 @@ export default function FieldRow({ name, field, value, onChange, disabled, user 
   return (
     <div className={`field-row${field.issues.length ? ' has-issue' : ''}`} data-field={name}>
       <div className="field-top">
-        <label htmlFor={id} className="field-label">{FIELD_LABELS[name]}</label>
+        <label htmlFor={id} className="field-label">{label || FIELD_LABELS[name]}</label>
         <Confidence field={field} user={user} />
       </div>
       {notes ? <textarea rows={3} {...props} /> : <input type={name === 'contact.email' ? 'email' : 'text'} {...props} />}

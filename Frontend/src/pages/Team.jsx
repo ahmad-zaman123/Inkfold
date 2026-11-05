@@ -21,6 +21,12 @@ function CopyLink({ link }) {
   )
 }
 
+const DESTINATION_HINTS = {
+  hubspot: 'A contact, company, deal and note.',
+  pipedrive: 'A person, organization, deal and note.',
+  sheets: 'One row per document. Good for a team without a CRM.',
+}
+
 export default function Team({ user, onChanged }) {
   const [team, setTeam] = useState(null)
   const [error, setError] = useState('')
@@ -77,7 +83,7 @@ export default function Team({ user, onChanged }) {
       <div className="page-head">
         <h1>Team</h1>
         <p className="lede small">
-          Everyone in the team sees the same documents, can review them, and sends them to the same HubSpot account.
+          Everyone in the team sees the same documents, can review them, and sends them to the same place.
         </p>
       </div>
       {error && <p className="banner error" role="alert">{error}</p>}
@@ -103,6 +109,30 @@ export default function Team({ user, onChanged }) {
       ) : (
         team.name && <p className="team-title">{team.name}</p>
       )}
+
+      <section className="card team-section" aria-labelledby="destination-heading">
+        <h2 id="destination-heading">Send documents to</h2>
+        {team.destinations.length === 0 && <p className="muted">Nothing is connected yet. Set up HubSpot, Pipedrive or Google Sheets on the server.</p>}
+        {team.destinations.length > 0 && (
+          <div className="destination-options" role="radiogroup" aria-label="Send documents to">
+            {team.destinations.map((option) => (
+              <label key={option.key} className={`destination-option${team.destination === option.key ? ' chosen' : ''}`}>
+                <input
+                  type="radio"
+                  name="destination"
+                  value={option.key}
+                  checked={team.destination === option.key}
+                  disabled={!owner || busy}
+                  onChange={() => run(() => api.chooseDestination(option.key), () => setNotice(`Documents now go to ${option.label}.`))}
+                />
+                <span className="destination-name">{option.label}</span>
+                <span className="destination-hint">{DESTINATION_HINTS[option.key]}</span>
+              </label>
+            ))}
+          </div>
+        )}
+        {!owner && <p className="hint">The team's owner chooses this.</p>}
+      </section>
 
       <section className="card team-section" aria-labelledby="members-heading">
         <h2 id="members-heading">People</h2>
