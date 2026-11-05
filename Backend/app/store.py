@@ -24,6 +24,8 @@ DOCUMENT_COLUMNS = "id, user_id, filename, mime, size, sha256, doc_type, status,
 # An email whose check never finished, say because the function timed out, is tried again after this long.
 INTAKE_STALE_AFTER = timedelta(minutes=10)
 INTAKE_HISTORY = timedelta(days=30)
+# Originals are kept for checking fields against, not as an archive, so the database stays small.
+FILE_LIFETIME = timedelta(days=30)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -79,6 +81,11 @@ CREATE TABLE IF NOT EXISTS intake_messages (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS intake_messages_user_idx ON intake_messages (user_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS document_files (
+    document_id UUID PRIMARY KEY REFERENCES documents(id) ON DELETE CASCADE,
+    data BYTEA NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     token_hash TEXT PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -336,10 +343,20 @@ class Store:
              Jsonb(source) if source else None),
         ).fetchone()
 
-    def add_document(self, user_id, **document):
-        """Returns the new document, or None if this user already uploaded the same file."""
+    def add_document(self, user_id, data=None, **document):
+        """Returns the new document, or None if this user already uploaded the same file. `data` keeps the original."""
         with self._connect() as db:
-            return self._insert_document(db, user_id, **document)
+            stored = self._insert_document(db, user_id, **document)
+            if stored and data:
+                db.execute("DELETE FROM document_files WHERE created_at < %s", (datetime.now(timezone.utc) - FILE_LIFETIME,))
+                db.execute("INSERT INTO document_files (document_id, data) VALUES (%s, %s)", (stored["id"], data))
+            return stored
+
+    def document_file(self, document_id):
+        """The original file's bytes, or None if it isn't kept."""
+        with self._connect() as db:
+            row = db.execute("SELECT data FROM document_files WHERE document_id = %s", (document_id,)).fetchone()
+        return bytes(row["data"]) if row else None
 
     def find_document_by_hash(self, user_id, sha256):
         with self._connect() as db:

@@ -335,6 +335,44 @@ def test_upload_reads_the_document(client, auth):
     assert document["sync_events"] == []
 
 
+def test_the_original_file_is_kept_for_its_owner(client, auth, database_url):
+    document = uploaded(client, auth)
+    response = client.get(f"/api/documents/{document['id']}/file", headers=auth)
+    assert response.status_code == 200 and response.content == PNG
+    assert response.headers["content-type"] == "image/png"
+    assert "sandbox" in response.headers["content-security-policy"]
+    stranger = sign_in(client, "someone-else@example.com")
+    assert client.get(f"/api/documents/{document['id']}/file", headers=stranger).status_code == 404
+    assert client.get(f"/api/documents/{document['id']}/file").status_code == 401
+
+
+def test_text_originals_come_back_as_utf8(client, auth):
+    data = "Name: Léa Durand\nEmail: lea@x.example".encode()
+    document = uploaded(client, auth, data=data, name="lead.txt")
+    response = client.get(f"/api/documents/{document['id']}/file", headers=auth)
+    assert response.text == data.decode() and response.headers["content-type"] == "text/plain; charset=utf-8"
+
+
+def test_old_originals_are_cleared_and_then_say_so(client, auth, database_url):
+    first = uploaded(client, auth)
+    with psycopg.connect(database_url, autocommit=True) as db:
+        db.execute("UPDATE document_files SET created_at = now() - interval '31 days'")
+    uploaded(client, auth, data=PNG + b"2")
+    response = client.get(f"/api/documents/{first['id']}/file", headers=auth)
+    assert response.status_code == 404 and "isn't kept" in response.json()["detail"]
+
+
+def test_demo_originals_are_the_bundled_samples(client, database_url):
+    auth = {"Authorization": "Bearer " + client.post("/api/auth/demo").json()["token"]}
+    documents = client.get("/api/documents", headers=auth).json()["documents"]
+    for document in documents:
+        response = client.get(f"/api/documents/{document['id']}/file", headers=auth)
+        assert response.status_code == 200
+        assert response.content == (SAMPLES / document["filename"]).read_bytes()
+    with psycopg.connect(database_url) as db:
+        assert db.execute("SELECT count(*) FROM document_files").fetchone()[0] == 0
+
+
 @pytest.mark.parametrize(
     "data, name, mime",
     [(b"%PDF-1.7 ...", "x.pdf", "application/pdf"), (b"\xff\xd8\xff\xe0jpeg", "x.jpg", "image/jpeg"), ("Name: Lina\nEmail: lina@x.example".encode(), "lead.txt", "text/plain")],

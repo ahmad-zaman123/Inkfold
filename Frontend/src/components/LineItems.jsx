@@ -16,7 +16,7 @@ export default function LineItems({ field, items, onChange, disabled }) {
   }
 
   return (
-    <div className="field-row line-items">
+    <div className="field-row line-items" data-field="invoice.line_items">
       <div className="field-top">
         <span className="field-label" id="line-items-label">Line items</span>
         {field.edited ? (

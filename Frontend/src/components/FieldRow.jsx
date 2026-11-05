@@ -21,7 +21,7 @@ export default function FieldRow({ name, field, value, onChange, disabled }) {
     'aria-invalid': field.issues.length ? true : undefined,
   }
   return (
-    <div className={`field-row${field.issues.length ? ' has-issue' : ''}`}>
+    <div className={`field-row${field.issues.length ? ' has-issue' : ''}`} data-field={name}>
       <div className="field-top">
         <label htmlFor={id} className="field-label">{FIELD_LABELS[name]}</label>
         <Confidence field={field} />

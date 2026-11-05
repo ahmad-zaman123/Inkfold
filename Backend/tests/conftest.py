@@ -39,7 +39,7 @@ def store(database_url):
     store = Store(database_url)
     store.init_schema()
     with psycopg.connect(database_url, autocommit=True) as db:
-        db.execute("TRUNCATE users, documents, sync_events, rate_limits, password_reset_tokens, intake_messages CASCADE")
+        db.execute("TRUNCATE users, documents, document_files, sync_events, rate_limits, password_reset_tokens, intake_messages CASCADE")
     yield store
     store.close()
 

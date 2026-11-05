@@ -6,6 +6,7 @@ import os
 import re
 import uuid
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Annotated, Any
 
 import httpx
@@ -61,6 +62,10 @@ RATE_LIMITS = {
     "crm_lookup": (60, timedelta(minutes=10), "Too many HubSpot look-ups. Please wait a few minutes."),
     "sync_user": (20, timedelta(days=1), "You've sent a lot to HubSpot today. Please try again tomorrow."),
 }
+# The demo's documents are the sample files, served from here so each demo account doesn't store copies.
+DEMO_FILES = Path(__file__).resolve().parent / "demo_files"
+DEMO_FILE_HASHES = {document["sha256"]: document["filename"] for document in demo_data.DEMO_DOCUMENTS}
+NO_ORIGINAL = "The original file isn't kept for this document."
 SIGNATURES = (
     (b"%PDF-", "application/pdf"),
     (b"\x89PNG\r\n\x1a\n", "image/png"),
@@ -427,7 +432,7 @@ def create_app(
         else:
             document.update(doc_type=extracted["doc_type"], status="needs_review", fields=normalize_fields(extracted["fields"]))
 
-        stored = store.add_document(user["id"], **document)
+        stored = store.add_document(user["id"], data=data, **document)
         if stored is None:
             # The same file arrived twice at once. Use the copy that was saved first.
             return store.find_document_by_hash(user["id"], sha256), True
@@ -569,6 +574,27 @@ def create_app(
     @app.get("/api/documents/{document_id}")
     def get_document(document_id: str, user=Depends(current_user)):
         return full(own_document(document_id, user))
+
+    @app.get("/api/documents/{document_id}/file")
+    def original_file(document_id: str, user=Depends(current_user)):
+        """The uploaded file, so the reviewer can check the fields against it."""
+        document = own_document(document_id, user)
+        data = store.document_file(document["id"])
+        if data is None and document["sha256"] in DEMO_FILE_HASHES:
+            data = (DEMO_FILES / DEMO_FILE_HASHES[document["sha256"]]).read_bytes()
+        if data is None:
+            raise HTTPException(status_code=404, detail=NO_ORIGINAL)
+        media_type = "text/plain; charset=utf-8" if document["mime"] == "text/plain" else document["mime"]
+        return Response(
+            content=data,
+            media_type=media_type,
+            headers={
+                # Uploaded files are never run as a page, even if someone opens the address directly.
+                "Content-Security-Policy": "sandbox; default-src 'none'",
+                "Content-Disposition": "inline",
+                "Cache-Control": "private, max-age=3600",
+            },
+        )
 
     @app.patch("/api/documents/{document_id}/fields")
     def edit_fields(document_id: str, body: FieldEdits, user=Depends(current_user)):

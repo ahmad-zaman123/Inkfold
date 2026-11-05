@@ -36,7 +36,7 @@ export function whenSessionExpires(handler) {
   onExpired = handler
 }
 
-async function request(path, { method = 'GET', json, form } = {}) {
+async function request(path, { method = 'GET', json, form, blob = false } = {}) {
   const headers = {}
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
@@ -53,6 +53,7 @@ async function request(path, { method = 'GET', json, form } = {}) {
   }
   if (response.status === 401 && token) onExpired()
   if (response.status === 204) return null
+  if (blob && response.ok) return response.blob()
   const data = await response.json().catch(() => null)
   if (!response.ok) {
     const error = new Error(messageFor(data?.detail))
@@ -86,6 +87,7 @@ export const api = {
   },
   saveFields: (id, fields) => request(`/documents/${id}/fields`, { method: 'PATCH', json: { fields } }),
   matches: (id) => request(`/documents/${id}/matches`),
+  file: (id) => request(`/documents/${id}/file`, { blob: true }),
   sync: (id) => request(`/documents/${id}/sync`, { method: 'POST' }),
   remove: (id) => request(`/documents/${id}`, { method: 'DELETE' }),
 }

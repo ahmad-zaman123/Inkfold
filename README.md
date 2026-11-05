@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/n8n-2.46-EA4B71?logo=n8n&logoColor=white&style=flat-square" alt="n8n" />
   <img src="https://img.shields.io/badge/HubSpot-CRM%20API-FF7A59?logo=hubspot&logoColor=white&style=flat-square" alt="HubSpot" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-212%20passing-2ea44f?style=flat-square" alt="212 tests passing" />
+  <img src="https://img.shields.io/badge/tests-216%20passing-2ea44f?style=flat-square" alt="216 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -174,6 +174,9 @@ The model only proposes values. Code decides what they mean: it parses the dates
 ### 🔍 Every value shows its source
 Each field keeps the text it was read from and a confidence score. Low-confidence fields are flagged, and anything you change is marked "Edited by you".
 
+### 📄 The original beside the fields
+The uploaded file sits next to the fields, with every value highlighted where it was read. Hover or focus a field and its highlight lights up and scrolls into view; click a highlight to jump to its field. PDFs render with pdf.js and text files as text. Photos have zoom but no highlights, since they have no text layer.
+
 ### 🧮 Checks the model can't skip
 Line items are added up and compared with the total. A due date before the issue date is flagged. A deal is only created when the total is clean.
 
@@ -230,6 +233,7 @@ Drop up to 10 files at once. They're read two at a time, each with its own resul
 | `POST` | `/api/intake/check` | Read new emails now. |
 | `POST` | `/api/intake/address` | Replace your intake address. The old one stops working. |
 | `POST` | `/api/intake/poll` | The scheduled check, with `Authorization: Bearer INTAKE_POLL_SECRET`. |
+| `GET` | `/api/documents/{id}/file` | The original upload, served sandboxed so it can't run as a page. |
 | `GET` | `/api/documents/{id}/matches` | The contact, company and deal already in HubSpot that a send would touch. |
 | `GET` | `/api/documents`, `/api/documents/{id}` | List documents, or one with its fields, issues and sync history. |
 | `PATCH` | `/api/documents/{id}/fields` | Save edits, as `{"fields": {"contact.phone": "+1 617 555 0123"}}`. |
@@ -245,6 +249,8 @@ Drop up to 10 files at once. They're read two at a time, each with its own resul
 - Deals use HubSpot's default pipeline.
 - The duplicate warning needs `HUBSPOT_TOKEN`. With n8n alone there's nothing to search HubSpot with, so it doesn't show.
 - A batch counts against the daily upload limit like single uploads, so the default of 10 per user is one full batch.
+- Originals are kept for 30 days, in Postgres, so the database stays small. After that the fields stay and the original pane says the file is gone. Documents from before this feature have no original.
+- Highlights match the quoted text, so a value the model reworded, or one on a scanned page without a text layer, isn't highlighted.
 - One check reads up to 5 documents, so it stays inside Vercel's time limit. Anything more waits for the next check.
 - GitHub runs scheduled jobs on a best-effort basis, so "every 10 minutes" can stretch at busy times. It also pauses them after 60 days without a commit.
 
@@ -270,6 +276,7 @@ Inkfold/
 │   │   ├── config.py       settings from the environment
 │   │   ├── crm.py          HubSpot client: upserts, search, associations, stage lookup
 │   │   ├── demo_data.py    the demo's pre-read sample documents
+│   │   ├── demo_files/     the sample files, served as the demo's originals
 │   │   ├── extract.py      Gemini extraction with model fallback
 │   │   ├── mailer.py       password reset emails over SMTP
 │   │   ├── intake.py       email intake: addresses, parsing and IMAP
@@ -279,15 +286,16 @@ Inkfold/
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              202 tests against a real Postgres
+│   ├── tests/              206 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json
 ├── Frontend/
 │   ├── src/
-│   │   ├── components/     upload, email intake, field rows, line items, HubSpot panel, Google button
+│   │   ├── components/     upload, email intake, original viewer, field rows, line items, HubSpot panel, Google button
 │   │   ├── pages/          landing, sign-in, password reset, account, documents, review
 │   │   ├── api.js          API client
+│   │   ├── highlight.js    finds each field's source text in the original
 │   │   └── styles.css
 │   ├── package.json
 │   └── vercel.json

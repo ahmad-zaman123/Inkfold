@@ -3,8 +3,10 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api.js'
 import FieldRow from '../components/FieldRow.jsx'
 import LineItems from '../components/LineItems.jsx'
+import Original from '../components/Original.jsx'
 import SyncPanel from '../components/SyncPanel.jsx'
 import { DOC_TYPES, GROUPS } from '../labels.js'
+import { marksFor } from '../highlight.js'
 
 const POLL_MS = 2000
 const POLL_LIMIT_MS = 2 * 60 * 1000
@@ -47,6 +49,9 @@ function Review({ id }) {
   const pollStarted = useRef(null)
   const [others, setOthers] = useState([])
   const [matches, setMatches] = useState(null)
+  // The field under the pointer or holding focus, shown in the original. Only focus scrolls the original to it.
+  const [hovered, setHovered] = useState(null)
+  const [focused, setFocused] = useState(null)
 
   const show = useCallback((next) => {
     setDocument(next)
@@ -90,6 +95,10 @@ function Review({ id }) {
     }
   }, [id, lookupKey])
 
+  // Highlights follow what was last saved, since unsaved typing isn't in the original.
+  const fieldsKey = document ? JSON.stringify(document.fields) : ''
+  const marks = useMemo(() => (fieldsKey ? marksFor(JSON.parse(fieldsKey)) : []), [fieldsKey])
+
   const dirtyKeys = useMemo(() => (document ? changedKeys(document, values) : []), [document, values])
   const dirty = dirtyKeys.length > 0
 
@@ -115,6 +124,14 @@ function Review({ id }) {
   const hasInvoice = document.doc_type === 'invoice' || GROUPS[2].keys.some((key) => document.fields[key].value !== null)
   const groups = GROUPS.filter((group) => group.title !== 'Invoice' || hasInvoice)
   const toCheck = Object.values(document.fields).filter((f) => f.value !== null && !f.edited && (f.issues.length || f.confidence < 0.7)).length
+
+  const fieldOf = (target) => target.closest?.('[data-field]')?.dataset.field ?? null
+
+  function pick(key) {
+    const target = window.document.querySelector(`[data-field="${key}"] input, [data-field="${key}"] textarea`)
+    target?.focus({ preventScroll: true })
+    target?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }
 
   async function save() {
     setSaving(true)
@@ -185,7 +202,14 @@ function Review({ id }) {
       )}
 
       <div className="review-grid">
-        <form className="fields" onSubmit={(e) => { e.preventDefault(); save() }}>
+        <Original document={document} marks={marks} active={hovered ?? focused} scrollKey={focused} onPick={pick} />
+        <form
+          className="fields"
+          onSubmit={(e) => { e.preventDefault(); save() }}
+          onFocus={(e) => setFocused(fieldOf(e.target))}
+          onMouseOver={(e) => setHovered(fieldOf(e.target))}
+          onMouseLeave={() => setHovered(null)}
+        >
           {groups.map((group) => (
             <fieldset key={group.title} className="card group">
               <legend>{group.title}</legend>
