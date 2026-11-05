@@ -1,0 +1,101 @@
+{
+ "doc_type": "business_card",
+ "fields": {
+  "contact.first_name": {
+   "value": "Liam",
+   "confidence": 1.0,
+   "source": "Liam"
+  },
+  "contact.last_name": {
+   "value": "Novak",
+   "confidence": 1.0,
+   "source": "Novak"
+  },
+  "contact.email": {
+   "value": "liam@novakhale.example.com",
+   "confidence": 1.0,
+   "source": "liam@novakhale.example.com"
+  },
+  "contact.phone": {
+   "value": "+420 601 234 567",
+   "confidence": 1.0,
+   "source": "+420 601 234 567"
+  },
+  "contact.job_title": {
+   "value": "Partner",
+   "confidence": 1.0,
+   "source": "Partner"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Novak & Hale Architects",
+   "confidence": 1.0,
+   "source": "NOVAK & HALE ARCHITECTS"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "Národní 37, 110 00 Praha 1",
+   "confidence": 1.0,
+   "source": "Národní 37\n110 00 Praha 1"
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

@@ -1,0 +1,101 @@
+{
+ "doc_type": "business_card",
+ "fields": {
+  "contact.first_name": {
+   "value": "Mei",
+   "confidence": 1.0,
+   "source": "Mei Tan"
+  },
+  "contact.last_name": {
+   "value": "Tan",
+   "confidence": 1.0,
+   "source": "Mei Tan"
+  },
+  "contact.email": {
+   "value": "mei.tan@harborpine.example.com",
+   "confidence": 1.0,
+   "source": "mei.tan@harborpine.example.com"
+  },
+  "contact.phone": {
+   "value": "+65 6123 4567",
+   "confidence": 1.0,
+   "source": "+65 6123 4567"
+  },
+  "contact.job_title": {
+   "value": "Product Designer",
+   "confidence": 1.0,
+   "source": "Product Designer"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "HARBOR & PINE",
+   "confidence": 1.0,
+   "source": "HARBOR & PINE"
+  },
+  "company.domain": {
+   "value": "harborpine.example.com",
+   "confidence": 1.0,
+   "source": "harborpine.example.com"
+  },
+  "company.address": {
+   "value": "8 Marina View, #12-01 Singapore 018960",
+   "confidence": 1.0,
+   "source": "8 Marina View, #12-01\nSingapore 018960"
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

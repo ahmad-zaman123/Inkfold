@@ -1,0 +1,101 @@
+{
+ "doc_type": "other",
+ "fields": {
+  "contact.first_name": {
+   "value": "Victor",
+   "confidence": 0.99,
+   "source": "Victor Hale"
+  },
+  "contact.last_name": {
+   "value": "Hale",
+   "confidence": 0.99,
+   "source": "Victor Hale"
+  },
+  "contact.email": {
+   "value": "victor.hale@halerobotics.example.com",
+   "confidence": 0.99,
+   "source": "victor.hale@halerobotics.example.com"
+  },
+  "contact.phone": {
+   "value": "+1 415 555 0172",
+   "confidence": 0.99,
+   "source": "+1 415 555 0172"
+  },
+  "contact.job_title": {
+   "value": "VP Business Development",
+   "confidence": 0.99,
+   "source": "VP Business Development, Hale Robotics"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Hale Robotics",
+   "confidence": 0.99,
+   "source": "Hale Robotics"
+  },
+  "company.domain": {
+   "value": "halerobotics.example.com",
+   "confidence": 0.99,
+   "source": "victor.hale@halerobotics.example.com"
+  },
+  "company.address": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": "Looking to explore a reseller partnership for picking robots in the Midwest.",
+   "confidence": 0.95,
+   "source": "We build picking robots for small warehouses and would like to explore a reseller partnership in the Midwest."
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

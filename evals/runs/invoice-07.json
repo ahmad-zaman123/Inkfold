@@ -1,0 +1,120 @@
+{
+ "doc_type": "invoice",
+ "fields": {
+  "contact.first_name": {
+   "value": "Marcus",
+   "confidence": 1.0,
+   "source": "Marcus Lee"
+  },
+  "contact.last_name": {
+   "value": "Lee",
+   "confidence": 1.0,
+   "source": "Marcus Lee"
+  },
+  "contact.email": {
+   "value": "marcus.lee@brightwave.example.com",
+   "confidence": 1.0,
+   "source": "marcus.lee@brightwave.example.com"
+  },
+  "contact.phone": {
+   "value": "+1 718 555 0163",
+   "confidence": 1.0,
+   "source": "+1 718 555 0163"
+  },
+  "contact.job_title": {
+   "value": "Facilities Coordinator",
+   "confidence": 1.0,
+   "source": "Facilities Coordinator"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Brightwave Health",
+   "confidence": 1.0,
+   "source": "Brightwave Health"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "1 Court Square, Long Island City, NY 11101",
+   "confidence": 1.0,
+   "source": "1 Court Square\nLong Island City, NY 11101"
+  },
+  "invoice.number": {
+   "value": "HOI-5520",
+   "confidence": 1.0,
+   "source": "HOI-5520"
+  },
+  "invoice.issue_date": {
+   "value": "Aug 3, 2026",
+   "confidence": 1.0,
+   "source": "Aug 3, 2026"
+  },
+  "invoice.due_date": {
+   "value": "Sep 2, 2026",
+   "confidence": 1.0,
+   "source": "Sep 2, 2026"
+  },
+  "invoice.currency": {
+   "value": "$",
+   "confidence": 1.0,
+   "source": "$4,196.00"
+  },
+  "invoice.total": {
+   "value": "4,196.00",
+   "confidence": 1.0,
+   "source": "$4,196.00"
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": [
+    {
+     "description": "Task chairs, mesh",
+     "quantity": "14",
+     "unit_price": "289.00",
+     "amount": "4,046.00"
+    },
+    {
+     "description": "Delivery and assembly",
+     "quantity": "1",
+     "unit_price": "350.00",
+     "amount": "350.00"
+    },
+    {
+     "description": "Loyalty discount",
+     "quantity": null,
+     "unit_price": null,
+     "amount": "-200.00"
+    }
+   ],
+   "confidence": 1.0,
+   "source": "Task chairs, mesh 14 $289.00 $4,046.00\nDelivery and assembly 1 $350.00 $350.00\nLoyalty discount -$200.00"
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

@@ -1,0 +1,101 @@
+{
+ "doc_type": "business_card",
+ "fields": {
+  "contact.first_name": {
+   "value": "Carlos",
+   "confidence": 1.0,
+   "source": "Carlos Mendes"
+  },
+  "contact.last_name": {
+   "value": "Mendes",
+   "confidence": 1.0,
+   "source": "Carlos Mendes"
+  },
+  "contact.email": {
+   "value": "carlos@atlassolar.example.com",
+   "confidence": 1.0,
+   "source": "carlos@atlassolar.example.com"
+  },
+  "contact.phone": {
+   "value": "+351 912 345 678",
+   "confidence": 1.0,
+   "source": "+351 912 345 678"
+  },
+  "contact.job_title": {
+   "value": "Sales Director",
+   "confidence": 1.0,
+   "source": "Sales Director"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "ATLAS SOLAR",
+   "confidence": 1.0,
+   "source": "ATLAS SOLAR"
+  },
+  "company.domain": {
+   "value": "atlassolar.example.com",
+   "confidence": 1.0,
+   "source": "atlassolar.example.com"
+  },
+  "company.address": {
+   "value": "Av. da Liberdade 190, 1250-147 Lisboa",
+   "confidence": 1.0,
+   "source": "Av. da Liberdade 190\n1250-147 Lisboa"
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

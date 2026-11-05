@@ -1,0 +1,101 @@
+{
+ "doc_type": "lead_form",
+ "fields": {
+  "contact.first_name": {
+   "value": "Grace",
+   "confidence": 1.0,
+   "source": "Grace Huang"
+  },
+  "contact.last_name": {
+   "value": "Huang",
+   "confidence": 1.0,
+   "source": "Grace Huang"
+  },
+  "contact.email": {
+   "value": "grace.huang@northfield.example.com",
+   "confidence": 1.0,
+   "source": "grace.huang@northfield.example.com"
+  },
+  "contact.phone": {
+   "value": "+1 646 555 0110",
+   "confidence": 1.0,
+   "source": "+1 646 555 0110"
+  },
+  "contact.job_title": {
+   "value": "Operations Manager",
+   "confidence": 1.0,
+   "source": "Operations Manager"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Northfield Clinics",
+   "confidence": 1.0,
+   "source": "Northfield Clinics"
+  },
+  "company.domain": {
+   "value": "northfield.example.com",
+   "confidence": 1.0,
+   "source": "northfield.example.com"
+  },
+  "company.address": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": "Interested in Monthly supply contract for 6 clinics",
+   "confidence": 1.0,
+   "source": "Monthly supply contract for 6 clinics"
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

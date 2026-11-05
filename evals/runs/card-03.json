@@ -1,0 +1,101 @@
+{
+ "doc_type": "business_card",
+ "fields": {
+  "contact.first_name": {
+   "value": "Fatima",
+   "confidence": 1.0,
+   "source": "Fatima"
+  },
+  "contact.last_name": {
+   "value": "Zahra",
+   "confidence": 1.0,
+   "source": "Zahra"
+  },
+  "contact.email": {
+   "value": "fatima.zahra@brightline.example.com",
+   "confidence": 1.0,
+   "source": "fatima.zahra@brightline.example.com"
+  },
+  "contact.phone": {
+   "value": "(020) 7946 0958",
+   "confidence": 1.0,
+   "source": "(020) 7946 0958"
+  },
+  "contact.job_title": {
+   "value": "Account Executive",
+   "confidence": 1.0,
+   "source": "Account Executive"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Brightline Media",
+   "confidence": 1.0,
+   "source": "BRIGHTLINE MEDIA"
+  },
+  "company.domain": {
+   "value": "brightline.example.com",
+   "confidence": 1.0,
+   "source": "brightline.example.com"
+  },
+  "company.address": {
+   "value": "22 Old Street, London EC1V 9AB",
+   "confidence": 1.0,
+   "source": "22 Old Street\nLondon EC1V 9AB"
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

@@ -1,0 +1,126 @@
+{
+ "doc_type": "invoice",
+ "fields": {
+  "contact.first_name": {
+   "value": "Daniel",
+   "confidence": 1.0,
+   "source": "Daniel Okafor"
+  },
+  "contact.last_name": {
+   "value": "Okafor",
+   "confidence": 1.0,
+   "source": "Daniel Okafor"
+  },
+  "contact.email": {
+   "value": "daniel.okafor@lumendental.example.com",
+   "confidence": 1.0,
+   "source": "daniel.okafor@lumendental.example.com"
+  },
+  "contact.phone": {
+   "value": "+1 512 555 0192",
+   "confidence": 1.0,
+   "source": "+1 512 555 0192"
+  },
+  "contact.job_title": {
+   "value": "Procurement Lead",
+   "confidence": 1.0,
+   "source": "Procurement Lead"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Lumen Dental Group",
+   "confidence": 1.0,
+   "source": "Lumen Dental Group"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "77 Pine Avenue, Austin, TX 78702",
+   "confidence": 1.0,
+   "source": "77 Pine Avenue\nAustin, TX 78702"
+  },
+  "invoice.number": {
+   "value": "INV-2207",
+   "confidence": 1.0,
+   "source": "INV-2207"
+  },
+  "invoice.issue_date": {
+   "value": "10/14/2026",
+   "confidence": 1.0,
+   "source": "10/14/2026"
+  },
+  "invoice.due_date": {
+   "value": "11/13/2026",
+   "confidence": 1.0,
+   "source": "11/13/2026"
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": "1674.63",
+   "confidence": 1.0,
+   "source": "$1,674.63"
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": [
+    {
+     "description": "Nitrile gloves, case of 1,000",
+     "quantity": "6",
+     "unit_price": "84.00",
+     "amount": "504.00"
+    },
+    {
+     "description": "Autoclave pouches",
+     "quantity": "20",
+     "unit_price": "38.50",
+     "amount": "770.00"
+    },
+    {
+     "description": "Dental bibs, 500 pack",
+     "quantity": "12",
+     "unit_price": "22.75",
+     "amount": "273.00"
+    },
+    {
+     "description": "Sales tax 8.25%",
+     "quantity": null,
+     "unit_price": null,
+     "amount": "127.63"
+    }
+   ],
+   "confidence": 1.0,
+   "source": "Nitrile gloves, case of 1,000 6 $84.00 $504.00\nAutoclave pouches 20 $38.50 $770.00\nDental bibs, 500 pack 12 $22.75 $273.00\nSales tax 8.25% $127.63"
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

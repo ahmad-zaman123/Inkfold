@@ -1,0 +1,3094 @@
+[
+ {
+  "id": "invoice-01",
+  "kind": "invoice",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Daniel",
+    "want": "Daniel",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Okafor",
+    "want": "Okafor",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "daniel.okafor@lumendental.example.com",
+    "want": "daniel.okafor@lumendental.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+15125550192",
+    "want": "+15125550192",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Procurement Lead",
+    "want": "Procurement Lead",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Lumen Dental Group",
+    "want": "Lumen Dental Group",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "77 Pine Avenue, Austin, TX 78702",
+    "want": "77 Pine Avenue, Austin, TX 78702",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "INV-2207",
+    "want": "INV-2207",
+    "present": true
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-10-14",
+    "want": "2026-10-14",
+    "present": true
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-11-13",
+    "want": "2026-11-13",
+    "present": true
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "USD",
+    "want": "USD",
+    "present": true
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "1674.63",
+    "want": "1674.63",
+    "present": true
+   }
+  ],
+  "line_items": {
+   "want": 4,
+   "got": 4,
+   "adds_up": true
+  }
+ },
+ {
+  "id": "invoice-02",
+  "kind": "invoice",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Harriet",
+    "want": "Harriet",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Cole",
+    "want": "Cole",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "harriet@fennickmoss.example.com",
+    "want": "harriet@fennickmoss.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+441134960587",
+    "want": "+441134960587",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Studio Director",
+    "want": "Studio Director",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Fennick & Moss Ltd",
+    "want": "Fennick & Moss Ltd",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "12 Calder Street, Leeds LS1 4AB",
+    "want": "12 Calder Street, Leeds LS1 4AB",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "0458",
+    "want": "0458",
+    "present": true
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-09-03",
+    "want": "2026-09-03",
+    "present": true
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-10-03",
+    "want": "2026-10-03",
+    "present": true
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "GBP",
+    "want": "GBP",
+    "present": true
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "1920.00",
+    "want": "1920.00",
+    "present": true
+   }
+  ],
+  "line_items": {
+   "want": 3,
+   "got": 3,
+   "adds_up": true
+  }
+ },
+ {
+  "id": "invoice-03",
+  "kind": "invoice",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Jonas",
+    "want": "Jonas",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Weber",
+    "want": "Weber",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "j.weber@weber-haustechnik.example.com",
+    "want": "j.weber@weber-haustechnik.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+4930901820",
+    "want": "+4930901820",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Head of Purchasing",
+    "want": "Head of Purchasing",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Weber Haustechnik GmbH",
+    "want": "Weber Haustechnik GmbH",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Lindenallee 8, 50968 Köln",
+    "want": "Lindenallee 8, 50968 Köln",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "RE-2026-0193",
+    "want": "RE-2026-0193",
+    "present": true
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-08-15",
+    "want": "2026-08-15",
+    "present": true
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-09-14",
+    "want": "2026-09-14",
+    "present": true
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "EUR",
+    "want": "EUR",
+    "present": true
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2444.26",
+    "want": "2444.26",
+    "present": true
+   }
+  ],
+  "line_items": {
+   "want": 3,
+   "got": 3,
+   "adds_up": true
+  }
+ },
+ {
+  "id": "invoice-04",
+  "kind": "invoice",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Ayesha",
+    "want": "Ayesha",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Raza",
+    "want": "Raza",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "ayesha.raza@industextiles.example.com",
+    "want": "ayesha.raza@industextiles.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+924235760145",
+    "want": "+924235760145",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Admin Manager",
+    "want": "Admin Manager",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Indus Textiles",
+    "want": "Indus Textiles",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "23-B Gulberg III, Lahore 54660",
+    "want": "23-B Gulberg III, Lahore 54660",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "INV-PK-311",
+    "want": "INV-PK-311",
+    "present": true
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-10-02",
+    "want": "2026-10-02",
+    "present": true
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-11-01",
+    "want": "2026-11-01",
+    "present": true
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "PKR",
+    "want": "PKR",
+    "present": true
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "144955.00",
+    "want": "144955.00",
+    "present": true
+   }
+  ],
+  "line_items": {
+   "want": 3,
+   "got": 3,
+   "adds_up": true
+  }
+ },
+ {
+  "id": "invoice-05",
+  "kind": "invoice",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "ap@grayline.example.com",
+    "want": "ap@grayline.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+12065550134",
+    "want": "+12065550134",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Grayline Freight Inc.",
+    "want": "Grayline Freight Inc.",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "5100 Terminal Way Seattle, WA 98134",
+    "want": "5100 Terminal Way, Seattle, WA 98134",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "BG-88014",
+    "want": "BG-88014",
+    "present": true
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-09-30",
+    "want": "2026-09-30",
+    "present": true
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-10-30",
+    "want": "2026-10-30",
+    "present": true
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "USD",
+    "want": "USD",
+    "present": true
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "9270.00",
+    "want": "9270.00",
+    "present": true
+   }
+  ],
+  "line_items": {
+   "want": 2,
+   "got": 2,
+   "adds_up": true
+  }
+ },
+ {
+  "id": "invoice-06",
+  "kind": "invoice",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Priya",
+    "want": "Priya",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Nair",
+    "want": "Nair",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "priya@coralbay.example.com",
+    "want": "priya@coralbay.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+61293744000",
+    "want": "+61293744000",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Owner",
+    "want": "Owner",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Coral Bay Yoga",
+    "want": "Coral Bay Yoga",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "40 Ocean Street Bondi NSW 2026",
+    "want": "40 Ocean Street, Bondi NSW 2026",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "1187",
+    "want": "1187",
+    "present": true
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-07-21",
+    "want": "2026-07-21",
+    "present": true
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-08-04",
+    "want": "2026-08-04",
+    "present": true
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "AUD",
+    "want": "AUD",
+    "present": true
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "869.00",
+    "want": "869.00",
+    "present": true
+   }
+  ],
+  "line_items": {
+   "want": 3,
+   "got": 3,
+   "adds_up": true
+  }
+ },
+ {
+  "id": "invoice-07",
+  "kind": "invoice",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Marcus",
+    "want": "Marcus",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Lee",
+    "want": "Lee",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "marcus.lee@brightwave.example.com",
+    "want": "marcus.lee@brightwave.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+17185550163",
+    "want": "+17185550163",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Facilities Coordinator",
+    "want": "Facilities Coordinator",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Brightwave Health",
+    "want": "Brightwave Health",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "1 Court Square, Long Island City, NY 11101",
+    "want": "1 Court Square, Long Island City, NY 11101",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "HOI-5520",
+    "want": "HOI-5520",
+    "present": true
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-08-03",
+    "want": "2026-08-03",
+    "present": true
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-09-02",
+    "want": "2026-09-02",
+    "present": true
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "USD",
+    "want": "USD",
+    "present": true
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "4196.00",
+    "want": "4196.00",
+    "present": true
+   }
+  ],
+  "line_items": {
+   "want": 3,
+   "got": 3,
+   "adds_up": true
+  }
+ },
+ {
+  "id": "invoice-08",
+  "kind": "invoice",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Sofia",
+    "want": "Sofia",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Marino",
+    "want": "Marino",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "sofia@tidewaterlegal.example.com",
+    "want": "sofia@tidewaterlegal.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+19175550181",
+    "want": "+19175550181",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Office Manager",
+    "want": "Office Manager",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Tidewater Legal",
+    "want": "Tidewater Legal",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "45 Main Street, Suite 600, Brooklyn, NY 11201",
+    "want": "45 Main Street, Suite 600, Brooklyn, NY 11201",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "GL-1093",
+    "want": "GL-1093",
+    "present": true
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-11-02",
+    "want": "2026-11-02",
+    "present": true
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2026-11-16",
+    "want": "2026-11-16",
+    "present": true
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "USD",
+    "want": "USD",
+    "present": true
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "1350.00",
+    "want": "1350.00",
+    "present": true
+   }
+  ],
+  "line_items": {
+   "want": 2,
+   "got": 2,
+   "adds_up": true
+  }
+ },
+ {
+  "id": "card-01",
+  "kind": "business_card",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Mei",
+    "want": "Mei",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Tan",
+    "want": "Tan",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "mei.tan@harborpine.example.com",
+    "want": "mei.tan@harborpine.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+6561234567",
+    "want": "+6561234567",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Product Designer",
+    "want": "Product Designer",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "HARBOR & PINE",
+    "want": "Harbor & Pine",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "harborpine.example.com",
+    "want": "harborpine.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "8 Marina View, #12-01 Singapore 018960",
+    "want": "8 Marina View, #12-01, Singapore 018960",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "card-02",
+  "kind": "business_card",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Carlos",
+    "want": "Carlos",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Mendes",
+    "want": "Mendes",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "carlos@atlassolar.example.com",
+    "want": "carlos@atlassolar.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+351912345678",
+    "want": "+351912345678",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Sales Director",
+    "want": "Sales Director",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "ATLAS SOLAR",
+    "want": "Atlas Solar",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "atlassolar.example.com",
+    "want": "atlassolar.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Av. da Liberdade 190, 1250-147 Lisboa",
+    "want": "Av. da Liberdade 190, 1250-147 Lisboa",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "card-03",
+  "kind": "business_card",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Fatima",
+    "want": "Fatima",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Zahra",
+    "want": "Zahra",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "fatima.zahra@brightline.example.com",
+    "want": "fatima.zahra@brightline.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": true,
+    "should_flag": true,
+    "got": "(020) 7946 0958",
+    "want": "(020) 7946 0958",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Account Executive",
+    "want": "Account Executive",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Brightline Media",
+    "want": "Brightline Media",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "brightline.example.com",
+    "want": "brightline.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "22 Old Street, London EC1V 9AB",
+    "want": "22 Old Street, London EC1V 9AB",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "card-04",
+  "kind": "business_card",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "James",
+    "want": "James",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "O'Connor",
+    "want": "O'Connor",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "james.oconnor@riverbendcu.example.com",
+    "want": "james.oconnor@riverbendcu.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+13125550147",
+    "want": "+13125550147",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Head of IT",
+    "want": "Head of IT",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Riverbend Credit Union",
+    "want": "Riverbend Credit Union",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "riverbendcu.example.com",
+    "want": "riverbendcu.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "200 N LaSalle St, Chicago, IL 60601",
+    "want": "200 N LaSalle St, Chicago, IL 60601",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "card-05",
+  "kind": "business_card",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Hana",
+    "want": "Hana",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Kobayashi",
+    "want": "Kobayashi",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "hana@kumotea.example.com",
+    "want": "hana@kumotea.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+81312345678",
+    "want": "+81312345678",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Marketing Manager",
+    "want": "Marketing Manager",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "KUMO TEA CO.",
+    "want": "Kumo Tea Co.",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "kumotea.example.com",
+    "want": "kumotea.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "2-4-1 Marunouchi Chiyoda-ku, Tokyo",
+    "want": "2-4-1 Marunouchi, Chiyoda-ku, Tokyo",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "card-06",
+  "kind": "business_card",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Liam",
+    "want": "Liam",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Novak",
+    "want": "Novak",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "liam@novakhale.example.com",
+    "want": "liam@novakhale.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+420601234567",
+    "want": [
+     "+420601234567",
+     "+420222123456"
+    ],
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Partner",
+    "want": "Partner",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Novak & Hale Architects",
+    "want": "Novak & Hale Architects",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": [
+     null,
+     "novakhale.example.com"
+    ],
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Národní 37, 110 00 Praha 1",
+    "want": "Národní 37, 110 00 Praha 1",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "lead-01",
+  "kind": "lead_form",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Grace",
+    "want": "Grace",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Huang",
+    "want": "Huang",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "grace.huang@northfield.example.com",
+    "want": "grace.huang@northfield.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+16465550110",
+    "want": "+16465550110",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Operations Manager",
+    "want": "Operations Manager",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Northfield Clinics",
+    "want": "Northfield Clinics",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "northfield.example.com",
+    "want": "northfield.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "lead-02",
+  "kind": "lead_form",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Tomás",
+    "want": "Tomás",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Rivera",
+    "want": "Rivera",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "tomas.rivera@verdeviva.example.com",
+    "want": "tomas.rivera@verdeviva.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+34612345678",
+    "want": "+34612345678",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Owner",
+    "want": "Owner",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Verde Viva",
+    "want": "Verde Viva",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": [
+     null,
+     "verdeviva.example.com"
+    ],
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "lead-03",
+  "kind": "lead_form",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Noah",
+    "want": "Noah",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Fischer",
+    "want": "Fischer",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "noah.fischer@alpenbank.example.com",
+    "want": "noah.fischer@alpenbank.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+41446681800",
+    "want": "+41446681800",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Head of Finance Operations",
+    "want": "Head of Finance Operations",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Alpen Privatbank",
+    "want": "Alpen Privatbank",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": [
+     null,
+     "alpenbank.example.com"
+    ],
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "lead-04",
+  "kind": "lead_form",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Bilal",
+    "want": "Bilal",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Ahmed",
+    "want": "Ahmed",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "bilal@crescentfoods.example.com",
+    "want": "bilal@crescentfoods.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": true,
+    "should_flag": true,
+    "got": "0300 1234567",
+    "want": "0300 1234567",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Purchasing Officer",
+    "want": "Purchasing Officer",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Crescent Foods",
+    "want": "Crescent Foods",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": [
+     null,
+     "crescentfoods.example.com"
+    ],
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "lead-05",
+  "kind": "lead_form",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Elena",
+    "want": "Elena",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Petrova",
+    "want": "Petrova",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "e.petrova@volga-analytics.example.com",
+    "want": "e.petrova@volga-analytics.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+74951234567",
+    "want": "+74951234567",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Chief Financial Officer",
+    "want": "Chief Financial Officer",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Volga Analytics",
+    "want": "Volga Analytics",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "volga-analytics.example.com",
+    "want": "volga-analytics.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Tverskaya St 7, Moscow 125009",
+    "want": "Tverskaya St 7, Moscow 125009",
+    "present": true
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "lead-06",
+  "kind": "lead_form",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Samuel",
+    "want": "Samuel",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Okoye",
+    "want": "Okoye",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "sam.okoye@lagosfreight.example.com",
+    "want": "sam.okoye@lagosfreight.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+2348021234567",
+    "want": "+2348021234567",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": [
+     null,
+     "Head of Logistics",
+     "Logistics"
+    ],
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Lagos Freight Partners",
+    "want": "Lagos Freight Partners",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": [
+     null,
+     "lagosfreight.example.com"
+    ],
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "email-01",
+  "kind": "email",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Nadia",
+    "want": "Nadia",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Karim",
+    "want": "Karim",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "nadia.karim@sablecapital.example.com",
+    "want": "nadia.karim@sablecapital.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+441614960321",
+    "want": "+441614960321",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Workplace Experience Manager",
+    "want": "Workplace Experience Manager",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Sable Capital",
+    "want": "Sable Capital",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "sablecapital.example.com",
+    "want": "sablecapital.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "email-02",
+  "kind": "email",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Victor",
+    "want": "Victor",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Hale",
+    "want": "Hale",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "victor.hale@halerobotics.example.com",
+    "want": "victor.hale@halerobotics.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+14155550172",
+    "want": "+14155550172",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "VP Business Development",
+    "want": "VP Business Development",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Hale Robotics",
+    "want": "Hale Robotics",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "halerobotics.example.com",
+    "want": [
+     null,
+     "halerobotics.example.com"
+    ],
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "email-03",
+  "kind": "email",
+  "model": "models/gemini-3.5-flash-lite",
+  "failed": null,
+  "doc_type_ok": false,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Ben",
+    "want": "Ben",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Carter",
+    "want": "Carter",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "ben@pixelforge.example.com",
+    "want": "ben@pixelforge.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "+13125550147",
+    "want": "+13125550147",
+    "present": true
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "CTO",
+    "want": "CTO",
+    "present": true
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Pixelforge Games",
+    "want": "Pixelforge Games",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "pixelforge.example.com",
+    "want": "pixelforge.example.com",
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ },
+ {
+  "id": "email-04",
+  "kind": "email",
+  "model": "models/gemini-3.1-flash-lite",
+  "failed": null,
+  "doc_type_ok": true,
+  "fields": [
+   {
+    "key": "contact.first_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Zara",
+    "want": "Zara",
+    "present": true
+   },
+   {
+    "key": "contact.last_name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Ali",
+    "want": "Ali",
+    "present": true
+   },
+   {
+    "key": "contact.email",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "zara@luminaevents.example.com",
+    "want": "zara@luminaevents.example.com",
+    "present": true
+   },
+   {
+    "key": "contact.phone",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "contact.job_title",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "company.name",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": "Lumina Events",
+    "want": "Lumina Events",
+    "present": true
+   },
+   {
+    "key": "company.domain",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": [
+     null,
+     "luminaevents.example.com"
+    ],
+    "present": true
+   },
+   {
+    "key": "company.address",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.number",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.issue_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.due_date",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.currency",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   },
+   {
+    "key": "invoice.total",
+    "outcome": "correct",
+    "flagged": false,
+    "should_flag": false,
+    "got": null,
+    "want": null,
+    "present": false
+   }
+  ]
+ }
+]

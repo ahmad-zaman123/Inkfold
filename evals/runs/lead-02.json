@@ -1,0 +1,101 @@
+{
+ "doc_type": "lead_form",
+ "fields": {
+  "contact.first_name": {
+   "value": "Tomás",
+   "confidence": 0.95,
+   "source": "Tomás Rivera"
+  },
+  "contact.last_name": {
+   "value": "Rivera",
+   "confidence": 0.95,
+   "source": "Tomás Rivera"
+  },
+  "contact.email": {
+   "value": "tomas.rivera@verdeviva.example.com",
+   "confidence": 0.95,
+   "source": "tomas.rivera@verdeviva.example.com"
+  },
+  "contact.phone": {
+   "value": "+34 612 345 678",
+   "confidence": 0.95,
+   "source": "+34 612 345 678"
+  },
+  "contact.job_title": {
+   "value": "Owner",
+   "confidence": 0.95,
+   "source": "Owner"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Verde Viva",
+   "confidence": 0.95,
+   "source": "Verde Viva"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": "Get a quote for 40 planters",
+   "confidence": 0.95,
+   "source": "Get a quote for 40 planters"
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

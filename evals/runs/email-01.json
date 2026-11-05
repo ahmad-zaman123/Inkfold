@@ -1,0 +1,101 @@
+{
+ "doc_type": "lead_form",
+ "fields": {
+  "contact.first_name": {
+   "value": "Nadia",
+   "confidence": 1.0,
+   "source": "Nadia Karim"
+  },
+  "contact.last_name": {
+   "value": "Karim",
+   "confidence": 1.0,
+   "source": "Nadia Karim"
+  },
+  "contact.email": {
+   "value": "nadia.karim@sablecapital.example.com",
+   "confidence": 1.0,
+   "source": "nadia.karim@sablecapital.example.com"
+  },
+  "contact.phone": {
+   "value": "+44 161 496 0321",
+   "confidence": 1.0,
+   "source": "+44 161 496 0321"
+  },
+  "contact.job_title": {
+   "value": "Workplace Experience Manager",
+   "confidence": 1.0,
+   "source": "Workplace Experience Manager"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Sable Capital",
+   "confidence": 1.0,
+   "source": "Sable Capital"
+  },
+  "company.domain": {
+   "value": "sablecapital.example.com",
+   "confidence": 1.0,
+   "source": "sablecapital.example.com"
+  },
+  "company.address": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": "Requesting quote for office plants and monthly care for 3,000 sq ft office space.",
+   "confidence": 0.95,
+   "source": "would like a quote for plants and monthly care for roughly 3,000 sq ft"
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

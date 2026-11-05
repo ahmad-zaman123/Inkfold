@@ -85,11 +85,30 @@ def _decimal(raw):
     for _, symbols in CURRENCY_SYMBOLS:
         for symbol in symbols:
             text = text.replace(symbol, "")
-    text = re.sub(r"[A-Za-z\s,]", "", text)
+    text = re.sub(r"[A-Za-z\s'\u00a0\u202f]", "", text)
+    text = _plain_number(text)
     try:
         return Decimal(text)
     except InvalidOperation:
         return None
+
+
+def _plain_number(text):
+    """Turns "1,234.56", "1.234,56", "12,50" and "1.234.567" into a plain "1234.56"-style number."""
+    if "," in text and "." in text:
+        # Whichever comes last is the decimal point.
+        thousands = "," if text.rfind(",") < text.rfind(".") else "."
+        text = text.replace(thousands, "")
+        return text.replace(",", ".")
+    for mark in (",", "."):
+        if mark in text:
+            groups = text.lstrip("-+").split(mark)
+            # "1,234" and "1.234.567" group thousands; "12,50" or a lone "1.5" has a decimal point.
+            if all(len(g) == 3 for g in groups[1:]) and (mark == "," or len(groups) > 2):
+                return text.replace(mark, "")
+            if mark == ",":
+                return text.replace(",", ".") if len(groups) == 2 else text
+    return text
 
 
 def _money(raw):
@@ -202,7 +221,8 @@ def normalize_fields(raw, edited_keys=frozenset()):
     # Fill a missing currency from the symbol on the total, such as "$1,250.00".
     currency, total = entries["invoice.currency"], entries["invoice.total"]
     if not currency.get("value") and total.get("value"):
-        code = currency_from_text(str(total["value"]))
+        # The cleaned total has lost its symbol by now, so the text it was read from is checked too.
+        code = currency_from_text(str(total["value"])) or currency_from_text(str(total.get("source") or ""))
         if code:
             currency.update(value=code, confidence=total.get("confidence"), source=total.get("source", ""))
     month_first = (_clean("currency", currency.get("value"), False)[0] or "") == "USD"

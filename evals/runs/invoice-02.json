@@ -1,0 +1,120 @@
+{
+ "doc_type": "invoice",
+ "fields": {
+  "contact.first_name": {
+   "value": "Harriet",
+   "confidence": 1.0,
+   "source": "Harriet Cole"
+  },
+  "contact.last_name": {
+   "value": "Cole",
+   "confidence": 1.0,
+   "source": "Harriet Cole"
+  },
+  "contact.email": {
+   "value": "harriet@fennickmoss.example.com",
+   "confidence": 1.0,
+   "source": "harriet@fennickmoss.example.com"
+  },
+  "contact.phone": {
+   "value": "+44 113 496 0587",
+   "confidence": 1.0,
+   "source": "+44 113 496 0587"
+  },
+  "contact.job_title": {
+   "value": "Studio Director",
+   "confidence": 1.0,
+   "source": "Studio Director"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Fennick & Moss Ltd",
+   "confidence": 1.0,
+   "source": "Fennick & Moss Ltd"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "12 Calder Street, Leeds LS1 4AB",
+   "confidence": 1.0,
+   "source": "12 Calder Street\nLeeds LS1 4AB"
+  },
+  "invoice.number": {
+   "value": "0458",
+   "confidence": 1.0,
+   "source": "0458"
+  },
+  "invoice.issue_date": {
+   "value": "03/09/2026",
+   "confidence": 1.0,
+   "source": "03/09/2026"
+  },
+  "invoice.due_date": {
+   "value": "03/10/2026",
+   "confidence": 1.0,
+   "source": "03/10/2026"
+  },
+  "invoice.currency": {
+   "value": "£",
+   "confidence": 1.0,
+   "source": "£1,920.00"
+  },
+  "invoice.total": {
+   "value": "1,920.00",
+   "confidence": 1.0,
+   "source": "£1,920.00"
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": [
+    {
+     "description": "A2 posters, matte, 250",
+     "quantity": "1",
+     "unit_price": "640.00",
+     "amount": "640.00"
+    },
+    {
+     "description": "Brand booklets, 48pp, 500",
+     "quantity": "1",
+     "unit_price": "960.00",
+     "amount": "960.00"
+    },
+    {
+     "description": "VAT 20%",
+     "quantity": null,
+     "unit_price": null,
+     "amount": "320.00"
+    }
+   ],
+   "confidence": 1.0,
+   "source": "A2 posters, matte, 250 1 £640.00 £640.00\nBrand booklets, 48pp, 500 1 £960.00 £960.00\nVAT 20% £320.00"
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

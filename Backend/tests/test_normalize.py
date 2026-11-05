@@ -76,7 +76,11 @@ def test_bad_date_is_flagged():
     assert issues(fields, "invoice.issue_date") == ["This doesn't look like a date."]
 
 
-@pytest.mark.parametrize("written, expected", [("$1,250", "1250.00"), ("1250.5", "1250.50"), ("Rs. 45,000", "45000.00"), ("€ 99.999", "100.00")])
+@pytest.mark.parametrize("written, expected", [
+        ("$1,250", "1250.00"), ("1250.5", "1250.50"), ("Rs. 45,000", "45000.00"), ("€ 99.999", "100.00"),
+        # European and Swiss ways of writing an amount, as Gemini copies them from the page.
+        ("2.444,26 €", "2444.26"), ("12,50", "12.50"), ("1.234.567", "1234567.00"), ("1 234,56", "1234.56"), ("CHF 1'234.50", "1234.50"),
+    ])
 def test_money(written, expected):
     assert value(normalize_fields(raw(invoice__total=written)), "invoice.total") == expected
 
@@ -97,6 +101,12 @@ def test_missing_currency_is_taken_from_the_total():
     fields = normalize_fields(raw(invoice__total="$1,250.00"))
     assert value(fields, "invoice.currency") == "USD"
     assert fields["invoice.currency"]["source"] == "$1,250.00"
+
+
+def test_missing_currency_is_taken_from_where_the_total_was_read():
+    # Gemini often returns the bare number but quotes the page, symbol and all.
+    fields = normalize_fields({"invoice.total": {"value": "1674.63", "confidence": 1.0, "source": "Total due: $1,674.63"}})
+    assert value(fields, "invoice.currency") == "USD" and value(fields, "invoice.total") == "1674.63"
 
 
 @pytest.mark.parametrize(

@@ -15,7 +15,8 @@
   <img src="https://img.shields.io/badge/Pipedrive-API%20v1-017737?style=flat-square" alt="Pipedrive" />
   <img src="https://img.shields.io/badge/Google%20Sheets-API%20v4-34A853?logo=googlesheets&logoColor=white&style=flat-square" alt="Google Sheets" />
   <img src="https://img.shields.io/badge/Gemini-structured%20output-8E75B2?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" />
-  <img src="https://img.shields.io/badge/tests-250%20passing-2ea44f?style=flat-square" alt="250 tests passing" />
+  <img src="https://img.shields.io/badge/accuracy-312%2F312%20fields-2ea44f?style=flat-square" alt="312 of 312 fields read correctly" />
+  <img src="https://img.shields.io/badge/tests-256%20passing-2ea44f?style=flat-square" alt="256 tests passing" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
@@ -56,6 +57,10 @@ Copying details from PDFs and photos into a CRM is slow, and a model that does i
   </picture>
 </p>
 
+### 🎯 Accuracy
+
+On a test set of 24 made-up documents (invoices in five countries' formats, business cards including a blurry phone photo, hand-filled lead forms and emails), Inkfold read **312 of 312 fields correctly**, including leaving blank every field the document doesn't have, and recognised the document type in 23 of 24. The first run scored 99%: Gemini had read everything right, but Inkfold's own clean-up turned a German total of `2.444,26 €` into 2.44 and missed a `$` it could have taken the currency from. Both are fixed and tested. Full results, every mistake and how to rerun it are in [`evals/`](evals/results.md). The set doesn't cover receipts, purchase orders or resumes yet.
+
 The sample documents in [`samples/`](samples/) are made up. All the people and companies in them are fictional.
 
 ## 🚀 Quick start
@@ -89,7 +94,7 @@ To send records through n8n instead of straight to HubSpot, see [`n8n/README.md`
 **4. Tests**
 
 ```bash
-cd Backend && .venv/bin/python -m pytest      # 240 tests, real Postgres, fake Gemini, HubSpot, Pipedrive and Sheets
+cd Backend && .venv/bin/python -m pytest      # 246 tests, real Postgres, fake Gemini, HubSpot, Pipedrive and Sheets
 node --test n8n/test/*.test.mjs                # 10 tests for the n8n Code nodes
 Backend/.venv/bin/python n8n/test/e2e.py       # API + n8n + fake HubSpot round trip
 ```
@@ -311,7 +316,7 @@ Inkfold/
 │   │   ├── store.py        schema and every SQL query
 │   │   └── sync.py         signing and the n8n hand-off
 │   ├── scripts/            local Postgres and table setup
-│   ├── tests/              240 tests against a real Postgres
+│   ├── tests/              246 tests against a real Postgres
 │   ├── asgi.py
 │   ├── requirements.txt
 │   └── vercel.json

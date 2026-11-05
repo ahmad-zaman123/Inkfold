@@ -1,0 +1,101 @@
+{
+ "doc_type": "lead_form",
+ "fields": {
+  "contact.first_name": {
+   "value": "Elena",
+   "confidence": 1.0,
+   "source": "Elena Petrova"
+  },
+  "contact.last_name": {
+   "value": "Petrova",
+   "confidence": 1.0,
+   "source": "Elena Petrova"
+  },
+  "contact.email": {
+   "value": "e.petrova@volga-analytics.example.com",
+   "confidence": 1.0,
+   "source": "e.petrova@volga-analytics.example.com"
+  },
+  "contact.phone": {
+   "value": "+7 495 123 4567",
+   "confidence": 1.0,
+   "source": "+7 495 123 4567"
+  },
+  "contact.job_title": {
+   "value": "Chief Financial Officer",
+   "confidence": 1.0,
+   "source": "Chief Financial Officer"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Volga Analytics",
+   "confidence": 1.0,
+   "source": "Volga Analytics"
+  },
+  "company.domain": {
+   "value": "volga-analytics.example.com",
+   "confidence": 1.0,
+   "source": "volga-analytics.example.com"
+  },
+  "company.address": {
+   "value": "Tverskaya St 7, Moscow 125009",
+   "confidence": 1.0,
+   "source": "Tverskaya St 7, Moscow 125009"
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

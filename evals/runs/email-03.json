@@ -1,0 +1,101 @@
+{
+ "doc_type": "business_card",
+ "fields": {
+  "contact.first_name": {
+   "value": "Ben",
+   "confidence": 1.0,
+   "source": "Ben Carter"
+  },
+  "contact.last_name": {
+   "value": "Carter",
+   "confidence": 1.0,
+   "source": "Ben Carter"
+  },
+  "contact.email": {
+   "value": "ben@pixelforge.example.com",
+   "confidence": 1.0,
+   "source": "ben@pixelforge.example.com"
+  },
+  "contact.phone": {
+   "value": "+1 312 555 0147",
+   "confidence": 1.0,
+   "source": "+1 312 555 0147"
+  },
+  "contact.job_title": {
+   "value": "CTO",
+   "confidence": 1.0,
+   "source": "CTO"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Pixelforge Games",
+   "confidence": 1.0,
+   "source": "Pixelforge Games"
+  },
+  "company.domain": {
+   "value": "www.pixelforge.example.com",
+   "confidence": 1.0,
+   "source": "www.pixelforge.example.com"
+  },
+  "company.address": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

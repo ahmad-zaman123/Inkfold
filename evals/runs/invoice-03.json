@@ -1,0 +1,120 @@
+{
+ "doc_type": "invoice",
+ "fields": {
+  "contact.first_name": {
+   "value": "Jonas",
+   "confidence": 1.0,
+   "source": "Jonas Weber"
+  },
+  "contact.last_name": {
+   "value": "Weber",
+   "confidence": 1.0,
+   "source": "Jonas Weber"
+  },
+  "contact.email": {
+   "value": "j.weber@weber-haustechnik.example.com",
+   "confidence": 1.0,
+   "source": "j.weber@weber-haustechnik.example.com"
+  },
+  "contact.phone": {
+   "value": "+49 30 901820",
+   "confidence": 1.0,
+   "source": "+49 30 901820"
+  },
+  "contact.job_title": {
+   "value": "Head of Purchasing",
+   "confidence": 1.0,
+   "source": "Head of Purchasing"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Weber Haustechnik GmbH",
+   "confidence": 1.0,
+   "source": "Weber Haustechnik GmbH"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "Lindenallee 8, 50968 Köln",
+   "confidence": 1.0,
+   "source": "Lindenallee 8\n50968 Köln"
+  },
+  "invoice.number": {
+   "value": "RE-2026-0193",
+   "confidence": 1.0,
+   "source": "RE-2026-0193"
+  },
+  "invoice.issue_date": {
+   "value": "15.08.2026",
+   "confidence": 1.0,
+   "source": "15.08.2026"
+  },
+  "invoice.due_date": {
+   "value": "14.09.2026",
+   "confidence": 1.0,
+   "source": "14.09.2026"
+  },
+  "invoice.currency": {
+   "value": "€",
+   "confidence": 1.0,
+   "source": "€"
+  },
+  "invoice.total": {
+   "value": "2.444,26",
+   "confidence": 1.0,
+   "source": "2.444,26 €"
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": [
+    {
+     "description": "Acoustic panels, 120 × 60 cm",
+     "quantity": "16",
+     "unit_price": "89,00 €",
+     "amount": "1.424,00 €"
+    },
+    {
+     "description": "Ceiling baffles",
+     "quantity": "6",
+     "unit_price": "105,00 €",
+     "amount": "630,00 €"
+    },
+    {
+     "description": "MwSt. 19%",
+     "quantity": null,
+     "unit_price": null,
+     "amount": "390,26 €"
+    }
+   ],
+   "confidence": 1.0,
+   "source": "Acoustic panels, 120 × 60 cm 16 89,00 € 1.424,00 €\nCeiling baffles 6 105,00 € 630,00 €\nMwSt. 19% 390,26 €"
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

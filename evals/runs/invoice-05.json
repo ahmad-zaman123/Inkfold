@@ -1,0 +1,114 @@
+{
+ "doc_type": "invoice",
+ "fields": {
+  "contact.first_name": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.last_name": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.email": {
+   "value": "ap@grayline.example.com",
+   "confidence": 1.0,
+   "source": "ap@grayline.example.com"
+  },
+  "contact.phone": {
+   "value": "+1 206 555 0134",
+   "confidence": 1.0,
+   "source": "+1 206 555 0134"
+  },
+  "contact.job_title": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Grayline Freight Inc.",
+   "confidence": 1.0,
+   "source": "Grayline Freight Inc."
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "5100 Terminal Way\nSeattle, WA 98134",
+   "confidence": 1.0,
+   "source": "5100 Terminal Way\nSeattle, WA 98134"
+  },
+  "invoice.number": {
+   "value": "BG-88014",
+   "confidence": 1.0,
+   "source": "BG-88014"
+  },
+  "invoice.issue_date": {
+   "value": "September 30, 2026",
+   "confidence": 1.0,
+   "source": "September 30, 2026"
+  },
+  "invoice.due_date": {
+   "value": "October 30, 2026",
+   "confidence": 1.0,
+   "source": "October 30, 2026"
+  },
+  "invoice.currency": {
+   "value": "$",
+   "confidence": 1.0,
+   "source": "$9,270.00"
+  },
+  "invoice.total": {
+   "value": "9,270.00",
+   "confidence": 1.0,
+   "source": "$9,270.00"
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": [
+    {
+     "description": "Diesel, 2,400 gal",
+     "quantity": "1",
+     "unit_price": "9,120.00",
+     "amount": "9,120.00"
+    },
+    {
+     "description": "Delivery fee",
+     "quantity": "1",
+     "unit_price": "150.00",
+     "amount": "150.00"
+    }
+   ],
+   "confidence": 1.0,
+   "source": "Diesel, 2,400 gal 1 $9,120.00 $9,120.00\nDelivery fee 1 $150.00 $150.00"
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

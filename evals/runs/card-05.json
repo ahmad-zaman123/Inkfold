@@ -1,0 +1,101 @@
+{
+ "doc_type": "business_card",
+ "fields": {
+  "contact.first_name": {
+   "value": "Hana",
+   "confidence": 1.0,
+   "source": "Hana Kobayashi"
+  },
+  "contact.last_name": {
+   "value": "Kobayashi",
+   "confidence": 1.0,
+   "source": "Hana Kobayashi"
+  },
+  "contact.email": {
+   "value": "hana@kumotea.example.com",
+   "confidence": 1.0,
+   "source": "hana@kumotea.example.com"
+  },
+  "contact.phone": {
+   "value": "+81 3 1234 5678",
+   "confidence": 1.0,
+   "source": "+81 3 1234 5678"
+  },
+  "contact.job_title": {
+   "value": "Marketing Manager",
+   "confidence": 1.0,
+   "source": "Marketing Manager"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "KUMO TEA CO.",
+   "confidence": 1.0,
+   "source": "KUMO TEA CO."
+  },
+  "company.domain": {
+   "value": "kumotea.example.com",
+   "confidence": 1.0,
+   "source": "kumotea.example.com"
+  },
+  "company.address": {
+   "value": "2-4-1 Marunouchi Chiyoda-ku, Tokyo",
+   "confidence": 1.0,
+   "source": "2-4-1 Marunouchi\nChiyoda-ku, Tokyo"
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

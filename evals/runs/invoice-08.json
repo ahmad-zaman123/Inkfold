@@ -1,0 +1,114 @@
+{
+ "doc_type": "invoice",
+ "fields": {
+  "contact.first_name": {
+   "value": "Sofia",
+   "confidence": 1.0,
+   "source": "Sofia"
+  },
+  "contact.last_name": {
+   "value": "Marino",
+   "confidence": 1.0,
+   "source": "Marino"
+  },
+  "contact.email": {
+   "value": "sofia@tidewaterlegal.example.com",
+   "confidence": 1.0,
+   "source": "sofia@tidewaterlegal.example.com"
+  },
+  "contact.phone": {
+   "value": "+1 917 555 0181",
+   "confidence": 1.0,
+   "source": "+1 917 555 0181"
+  },
+  "contact.job_title": {
+   "value": "Office Manager",
+   "confidence": 1.0,
+   "source": "Office Manager"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Tidewater Legal",
+   "confidence": 1.0,
+   "source": "Tidewater Legal"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "45 Main Street, Suite 600, Brooklyn, NY 11201",
+   "confidence": 1.0,
+   "source": "45 Main Street, Suite 600\nBrooklyn, NY 11201"
+  },
+  "invoice.number": {
+   "value": "GL-1093",
+   "confidence": 1.0,
+   "source": "GL-1093"
+  },
+  "invoice.issue_date": {
+   "value": "11/02/2026",
+   "confidence": 1.0,
+   "source": "11/02/2026"
+  },
+  "invoice.due_date": {
+   "value": "11/16/2026",
+   "confidence": 1.0,
+   "source": "11/16/2026"
+  },
+  "invoice.currency": {
+   "value": "$",
+   "confidence": 1.0,
+   "source": "$1,350.00"
+  },
+  "invoice.total": {
+   "value": "1350.00",
+   "confidence": 1.0,
+   "source": "$1,350.00"
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": [
+    {
+     "description": "Weekly office cleaning, October",
+     "quantity": "4",
+     "unit_price": "260.00",
+     "amount": "1,040.00"
+    },
+    {
+     "description": "Carpet deep clean",
+     "quantity": "1",
+     "unit_price": "310.00",
+     "amount": "310.00"
+    }
+   ],
+   "confidence": 1.0,
+   "source": "Weekly office cleaning, October 4 $260.00 $1,040.00\nCarpet deep clean 1 $310.00 $310.00"
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

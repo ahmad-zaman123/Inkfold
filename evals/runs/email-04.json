@@ -1,0 +1,101 @@
+{
+ "doc_type": "lead_form",
+ "fields": {
+  "contact.first_name": {
+   "value": "Zara",
+   "confidence": 1.0,
+   "source": "Zara"
+  },
+  "contact.last_name": {
+   "value": "Ali",
+   "confidence": 1.0,
+   "source": "Ali"
+  },
+  "contact.email": {
+   "value": "zara@luminaevents.example.com",
+   "confidence": 1.0,
+   "source": "zara@luminaevents.example.com"
+  },
+  "contact.phone": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.job_title": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Lumina Events",
+   "confidence": 1.0,
+   "source": "Lumina Events"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": "Plans 30+ corporate events a year and wants a quote for AV package.",
+   "confidence": 1.0,
+   "source": "She plans 30+ corporate events a year and wants a quote for our AV package."
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

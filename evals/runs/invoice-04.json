@@ -1,0 +1,120 @@
+{
+ "doc_type": "invoice",
+ "fields": {
+  "contact.first_name": {
+   "value": "Ayesha",
+   "confidence": 1.0,
+   "source": "Ayesha Raza"
+  },
+  "contact.last_name": {
+   "value": "Raza",
+   "confidence": 1.0,
+   "source": "Ayesha Raza"
+  },
+  "contact.email": {
+   "value": "ayesha.raza@industextiles.example.com",
+   "confidence": 1.0,
+   "source": "ayesha.raza@industextiles.example.com"
+  },
+  "contact.phone": {
+   "value": "+92 42 35760145",
+   "confidence": 1.0,
+   "source": "+92 42 35760145"
+  },
+  "contact.job_title": {
+   "value": "Admin Manager",
+   "confidence": 1.0,
+   "source": "Admin Manager"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Indus Textiles",
+   "confidence": 1.0,
+   "source": "Indus Textiles"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "23-B Gulberg III, Lahore 54660",
+   "confidence": 1.0,
+   "source": "23-B Gulberg III\nLahore 54660"
+  },
+  "invoice.number": {
+   "value": "INV-PK-311",
+   "confidence": 1.0,
+   "source": "INV-PK-311"
+  },
+  "invoice.issue_date": {
+   "value": "2 October 2026",
+   "confidence": 1.0,
+   "source": "2 October 2026"
+  },
+  "invoice.due_date": {
+   "value": "1 November 2026",
+   "confidence": 1.0,
+   "source": "1 November 2026"
+  },
+  "invoice.currency": {
+   "value": "Rs.",
+   "confidence": 1.0,
+   "source": "Rs."
+  },
+  "invoice.total": {
+   "value": "144,955.00",
+   "confidence": 1.0,
+   "source": "144,955.00"
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": [
+    {
+     "description": "Corrugated cartons, 5-ply",
+     "quantity": "2,000",
+     "unit_price": "52.00",
+     "amount": "104,000.00"
+    },
+    {
+     "description": "Printed tape rolls",
+     "quantity": "300",
+     "unit_price": "95.00",
+     "amount": "28,500.00"
+    },
+    {
+     "description": "Sales tax 9.4%",
+     "quantity": null,
+     "unit_price": null,
+     "amount": "12,455.00"
+    }
+   ],
+   "confidence": 1.0,
+   "source": "Corrugated cartons, 5-ply 2,000 Rs. 52.00 Rs. 104,000.00\nPrinted tape rolls 300 Rs. 95.00 Rs. 28,500.00\nSales tax 9.4% Rs. 12,455.00"
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}

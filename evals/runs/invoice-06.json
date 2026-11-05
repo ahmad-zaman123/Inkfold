@@ -1,0 +1,120 @@
+{
+ "doc_type": "invoice",
+ "fields": {
+  "contact.first_name": {
+   "value": "Priya",
+   "confidence": 1.0,
+   "source": "Priya"
+  },
+  "contact.last_name": {
+   "value": "Nair",
+   "confidence": 1.0,
+   "source": "Nair"
+  },
+  "contact.email": {
+   "value": "priya@coralbay.example.com",
+   "confidence": 1.0,
+   "source": "priya@coralbay.example.com"
+  },
+  "contact.phone": {
+   "value": "+61 2 9374 4000",
+   "confidence": 1.0,
+   "source": "+61 2 9374 4000"
+  },
+  "contact.job_title": {
+   "value": "Owner",
+   "confidence": 1.0,
+   "source": "Owner"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Coral Bay Yoga",
+   "confidence": 1.0,
+   "source": "Coral Bay Yoga"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": "40 Ocean Street\nBondi NSW 2026",
+   "confidence": 1.0,
+   "source": "40 Ocean Street\nBondi NSW 2026"
+  },
+  "invoice.number": {
+   "value": "1187",
+   "confidence": 1.0,
+   "source": "1187"
+  },
+  "invoice.issue_date": {
+   "value": "21/07/2026",
+   "confidence": 1.0,
+   "source": "21/07/2026"
+  },
+  "invoice.due_date": {
+   "value": "04/08/2026",
+   "confidence": 1.0,
+   "source": "04/08/2026"
+  },
+  "invoice.currency": {
+   "value": "AUD",
+   "confidence": 1.0,
+   "source": "AUD"
+  },
+  "invoice.total": {
+   "value": "869.00",
+   "confidence": 1.0,
+   "source": "869.00"
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": [
+    {
+     "description": "Website refresh",
+     "quantity": "1",
+     "unit_price": "720.00",
+     "amount": "720.00"
+    },
+    {
+     "description": "Photo editing, hourly",
+     "quantity": "2",
+     "unit_price": "35.00",
+     "amount": "70.00"
+    },
+    {
+     "description": "GST",
+     "quantity": null,
+     "unit_price": null,
+     "amount": "79.00"
+    }
+   ],
+   "confidence": 0.95,
+   "source": "Website\nrefresh 1 720.00 720.00\nPhoto\nediting,\nhourly\n2 35.00 70.00\nGST 79.00"
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

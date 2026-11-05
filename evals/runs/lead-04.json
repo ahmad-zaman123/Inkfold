@@ -1,0 +1,101 @@
+{
+ "doc_type": "lead_form",
+ "fields": {
+  "contact.first_name": {
+   "value": "Bilal",
+   "confidence": 0.95,
+   "source": "Bilal Ahmed"
+  },
+  "contact.last_name": {
+   "value": "Ahmed",
+   "confidence": 0.95,
+   "source": "Bilal Ahmed"
+  },
+  "contact.email": {
+   "value": "bilal@crescentfoods.example.com",
+   "confidence": 0.95,
+   "source": "bilal@crescentfoods.example.com"
+  },
+  "contact.phone": {
+   "value": "0300 1234567",
+   "confidence": 0.95,
+   "source": "0300 1234567"
+  },
+  "contact.job_title": {
+   "value": "Purchasing Officer",
+   "confidence": 0.95,
+   "source": "Purchasing Officer"
+  },
+  "contact.location": {
+   "value": "Karachi",
+   "confidence": 0.95,
+   "source": "Karachi"
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Crescent Foods",
+   "confidence": 0.95,
+   "source": "Crescent Foods"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": "Bulk turmeric and chilli, monthly",
+   "confidence": 0.95,
+   "source": "Bulk turmeric and chilli, monthly"
+  }
+ },
+ "model": "models/gemini-3.5-flash-lite"
+}

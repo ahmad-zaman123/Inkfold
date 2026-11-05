@@ -23,6 +23,8 @@ from pathlib import Path
 BACKEND = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND))
 
+from dotenv import load_dotenv  # noqa: E402
+
 from app.config import DEFAULT_EXTRACT_MODELS  # noqa: E402
 from app.extract import ExtractionFailed, ExtractionUnavailable, _client, extract_document  # noqa: E402
 from app.main import sniff_mime  # noqa: E402
@@ -41,6 +43,8 @@ class Recorder:
     """Passes calls to the Gemini client and notes which model answered."""
 
     def __init__(self, client):
+        # Holding the client itself keeps its connection open; with only .models it gets closed.
+        self.client = client
         self.inner = client.models
         self.models = self
         self.last_model = None
@@ -62,6 +66,8 @@ def read_case(case, settings, recorder):
 
 
 def run(cases, fresh):
+    # A key in Backend/.env works too, so it never has to be typed on the command line.
+    load_dotenv(BACKEND / ".env")
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         sys.exit("Set GEMINI_API_KEY first.")

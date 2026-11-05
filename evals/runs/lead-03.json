@@ -1,0 +1,101 @@
+{
+ "doc_type": "lead_form",
+ "fields": {
+  "contact.first_name": {
+   "value": "Noah",
+   "confidence": 1.0,
+   "source": "Noah"
+  },
+  "contact.last_name": {
+   "value": "Fischer",
+   "confidence": 1.0,
+   "source": "Fischer"
+  },
+  "contact.email": {
+   "value": "noah.fischer@alpenbank.example.com",
+   "confidence": 1.0,
+   "source": "noah.fischer@alpenbank.example.com"
+  },
+  "contact.phone": {
+   "value": "+41 44 668 1800",
+   "confidence": 1.0,
+   "source": "+41 44 668 1800"
+  },
+  "contact.job_title": {
+   "value": "Head of Finance Operations",
+   "confidence": 1.0,
+   "source": "Head of Finance Operations"
+  },
+  "contact.location": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "contact.linkedin": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.name": {
+   "value": "Alpen Privatbank",
+   "confidence": 1.0,
+   "source": "Alpen Privatbank"
+  },
+  "company.domain": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "company.address": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.number": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.issue_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.due_date": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.currency": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.total": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.payment_method": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "invoice.line_items": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "resume.skills": {
+   "value": null,
+   "confidence": 0.0,
+   "source": ""
+  },
+  "notes": {
+   "value": "Team size: 25-50. Message: We want to replace spreadsheets for month-end close.",
+   "confidence": 0.95,
+   "source": "TEAM SIZE\n25–50\nMESSAGE\nWe want to replace spreadsheets for month-end close."
+  }
+ },
+ "model": "models/gemini-3.1-flash-lite"
+}
