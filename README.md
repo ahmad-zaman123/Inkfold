@@ -25,7 +25,7 @@
   <sub>Click <b>Try the live demo</b> to review three sample documents and send one to HubSpot. No sign-up needed.</sub>
 </p>
 
-https://github.com/user-attachments/assets/79d81862-3c51-41e1-999e-c491c6d6389c
+https://github.com/user-attachments/assets/32d0f9a3-e89f-4517-adc5-ce179d04de55
 
 <p align="center">
   <a href="#-quick-start">Quick start</a> ·
