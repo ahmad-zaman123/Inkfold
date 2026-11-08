@@ -101,6 +101,7 @@ def make_settings(database_url, **overrides):
         "jwt_secret": "test-jwt-secret-that-is-long-enough-for-hs256",
         "gemini_api_key": "unused",
         "extract_models": ["fake-model"],
+        "crm_owner_emails": ["*"],
         "hubspot_token": "pat-test",
         "hubspot_portal_id": "4242",
         "hubspot_deal_stage": "closedwon",

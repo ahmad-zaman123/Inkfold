@@ -29,7 +29,7 @@ DOCUMENT_COLUMNS = (
     "id, user_id, team_id, filename, mime, size, sha256, doc_type, status, error, fields, crm, source, created_at, updated_at, "
     "(SELECT email FROM users WHERE users.id = documents.user_id) AS added_by"
 )
-MEMBER_COLUMNS = "id, email, team_role"
+MEMBER_COLUMNS = "id, email, team_role, is_demo"
 # An email whose check never finished, say because the function timed out, is tried again after this long.
 INTAKE_STALE_AFTER = timedelta(minutes=10)
 INTAKE_HISTORY = timedelta(days=30)

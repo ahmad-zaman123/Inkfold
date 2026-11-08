@@ -106,6 +106,7 @@ No test calls Gemini, HubSpot, Pipedrive or Google, so none of them need keys.
 | `JWT_SECRET` | **yes** | Signs session tokens. Use a long random string. |
 | `GEMINI_API_KEY` | **yes** | Reads the documents. |
 | `GEMINI_EXTRACT_MODELS` | no | Comma-separated, tried in order when one is busy, out of quota or retired. |
+| `CRM_OWNER_EMAILS` | to send for real | Comma-separated accounts whose team sends to the real HubSpot, Pipedrive or Google Sheet; their teammates do too. Everyone else, and every demo, gets a practice send that shows what the CRM would get without contacting it, and a duplicate check that only looks at their own practice sends. `*` means every signed-up account (demos still practise). Empty means nobody sends for real. |
 | `HUBSPOT_TOKEN` | to send | HubSpot service key, or a legacy private app token on older accounts. Without it (and without n8n), "Send to HubSpot" explains that HubSpot isn't connected. |
 | `HUBSPOT_PORTAL_ID` | no | Your HubSpot account ID, so the app can link to the records it made. |
 | `HUBSPOT_DEAL_STAGE` | no | Stage for new deals, by name or ID. Defaults to `closedwon`, since an invoice is a sale that happened. Newer HubSpot accounts use numeric stage IDs, so a name is looked up in the default pipeline. |
@@ -335,7 +336,7 @@ Inkfold/
 
 ## ☁️ Deployment & CI
 
-- **Vercel**, as two projects from this repo: `Backend` (serverless Python) and `Frontend` (Vite). Postgres is on Neon. Set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `HUBSPOT_TOKEN`, `HUBSPOT_PORTAL_ID` and `CORS_ALLOWED_ORIGINS` on the backend, plus the Pipedrive and Google Sheets keys if you use them, and `VITE_API_URL` on the frontend. Create or update the tables with `scripts/init_db.py`, which is safe to run again after an upgrade.
+- **Vercel**, as two projects from this repo: `Backend` (serverless Python) and `Frontend` (Vite). Postgres is on Neon. Set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `HUBSPOT_TOKEN`, `HUBSPOT_PORTAL_ID`, `CRM_OWNER_EMAILS` and `CORS_ALLOWED_ORIGINS` on the backend, plus the Pipedrive and Google Sheets keys if you use them, and `VITE_API_URL` on the frontend. Create or update the tables with `scripts/init_db.py`, which is safe to run again after an upgrade.
 - **Email intake** (`intake.yml`) calls `/api/intake/poll` every 10 minutes. Set the `INKFOLD_API_URL` repository variable and the `INTAKE_POLL_SECRET` secret, the same value as on the backend. Until both are set, it does nothing.
 - **CI** (`ci.yml`) runs the backend tests, the n8n Code node tests, a check that the workflow JSON matches its source files, and the frontend build on every push and pull request.
 

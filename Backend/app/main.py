@@ -4,6 +4,7 @@ import imaplib
 import logging
 import os
 import re
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -219,7 +220,7 @@ def needs_for(fields, destination):
     return missing_for_sync(fields) if destination in CRM_DESTINATIONS else []
 
 
-def public_document(document, events=None, destination=None):
+def public_document(document, events=None, destination=None, practice=False):
     summary = {
         key: document[key]
         for key in ("id", "filename", "mime", "size", "doc_type", "status", "error", "source", "created_at", "updated_at", "added_by")
@@ -231,7 +232,9 @@ def public_document(document, events=None, destination=None):
     fields = complete(document["fields"])
     missing = needs_for(fields, destination)
     # Sent before, but somewhere other than where the team sends now, so it can go there too.
-    elsewhere = document["status"] == "synced" and sent_to(document["crm"]) != destination
+    # Sent somewhere else, or only practised and now able to go for real (or the other way round).
+    practised = bool((document["crm"] or {}).get("simulated"))
+    elsewhere = document["status"] == "synced" and (sent_to(document["crm"]) != destination or practised != practice)
     ready = document["status"] in ("needs_review", "sync_failed") or is_stale_sync(document) or elsewhere
     return {
         **summary,
@@ -257,6 +260,65 @@ def crm_summary(crm, destination="hubspot"):
     keys = ("contact_id", "company_id", "deal_id", "note_id")
     parts = [f"{name} {crm[key]}" for key, name in zip(keys, RECORD_NAMES[destination]) if crm.get(key)]
     return f"Saved in {label}: " + ", ".join(parts) + "." if parts else f"Saved in {label}."
+
+
+def practice_crm(record, destination, existing=None):
+    """Made-up record ids for a practice send. A resend keeps the ids it made before, as a real update would."""
+    existing = existing if (existing or {}).get("simulated") else {}
+
+    def made_up(key):
+        return existing.get(key) or f"demo-{secrets.token_hex(4)}"
+
+    if destination == "sheets":
+        return {"row": existing.get("row") or "practice", "simulated": True}
+    crm = {"contact_id": made_up("contact_id"), "simulated": True}
+    for kind in ("company", "deal", "note"):
+        if record.get(kind):
+            crm[f"{kind}_id"] = made_up(f"{kind}_id")
+    return crm
+
+
+def practice_summary(record, destination):
+    label = DESTINATIONS[destination]
+    if destination == "sheets":
+        return f"Practice send: nothing left Inkfold. In a real account this adds a row to {label}."
+    names = dict(zip(("contact", "company", "deal"), RECORD_NAMES[destination]))
+    contact = record["contact"]
+    person = " ".join(v for v in (contact.get("firstname"), contact.get("lastname")) if v)
+    parts = [f"{names['contact']} {person + ' <' + contact['email'] + '>' if person else contact['email']}"]
+    if record.get("company"):
+        parts.append(f"{names['company']} {record['company'].get('name') or record['company'].get('domain')}")
+    if record.get("deal"):
+        parts.append(f"{names['deal']} \"{record['deal']['dealname']}\"")
+    return f"Practice send: nothing left Inkfold. In a real account {label} would get " + ", ".join(parts) + "."
+
+
+def practice_matches(record, documents, document_id):
+    """What an earlier practice send from this team already "saved", found the way the CRM look-up would."""
+    found = {"contact": None, "company": None, "deal": None}
+    email = (record.get("contact") or {}).get("email", "").lower()
+    company = record.get("company") or {}
+    deal = (record.get("deal") or {}).get("dealname")
+    for other in documents:
+        crm = other["crm"] or {}
+        if not crm.get("simulated") or other["id"] == document_id:
+            continue
+        theirs = to_crm_record(other["fields"], other["doc_type"])
+        when = other["updated_at"].isoformat()
+        their_contact = theirs.get("contact") or {}
+        if email and not found["contact"] and (their_contact.get("email") or "").lower() == email:
+            name = " ".join(v for v in (their_contact.get("firstname"), their_contact.get("lastname")) if v)
+            found["contact"] = {"id": crm["contact_id"], "name": name or email, "updated_at": when, "url": None}
+        their_company = theirs.get("company") or {}
+        same_company = (company.get("domain") and company.get("domain") == their_company.get("domain")) or (
+            not company.get("domain") and company.get("name") and company.get("name") == their_company.get("name")
+        )
+        if same_company and not found["company"] and crm.get("company_id"):
+            found["company"] = {"id": crm["company_id"], "name": their_company.get("name") or their_company.get("domain"), "updated_at": when, "url": None}
+        their_deal = theirs.get("deal") or {}
+        if deal and not found["deal"] and their_deal.get("dealname") == deal and crm.get("deal_id"):
+            found["deal"] = {"id": crm["deal_id"], "name": deal, "amount": their_deal.get("amount"), "updated_at": when, "url": None}
+    return found
 
 
 def parse_id(value):
@@ -330,6 +392,8 @@ def create_app(
             "is_demo": user["is_demo"],
             "has_password": user["has_password"],
             "team": {"role": user["team_role"], "size": user["team_size"]},
+            # Practice accounts send nowhere real: the app says so next to the Send button.
+            "practice_sends": not reaches_crm(user),
         }
 
     def current_user(authorization: str = Header(default="")):
@@ -371,9 +435,22 @@ def create_app(
             return team["destination"]
         return options[0] if options else None
 
+    crm_owners = set(settings.get("crm_owner_emails") or [])
+
+    def team_reaches_crm(team_id):
+        """Whether this team's sends go to the real CRM: only when its owner is a listed account. A demo never does."""
+        owners = [m for m in store.team_members(team_id) if m["team_role"] == "owner"]
+        if not owners or any(m["is_demo"] for m in owners):
+            return False
+        return "*" in crm_owners or any(m["email"].lower() in crm_owners for m in owners)
+
+    def reaches_crm(user):
+        return not user["is_demo"] and team_reaches_crm(user["team_id"])
+
     def full(document):
         destination = destination_of(store.team(document["team_id"]))
-        return public_document(document, store.sync_events(document["id"]), destination)
+        practice = destination in DESTINATIONS and not team_reaches_crm(document["team_id"])
+        return public_document(document, store.sync_events(document["id"]), destination, practice)
 
     @app.get("/api/health")
     def health():
@@ -735,6 +812,15 @@ def create_app(
         """What the CRM already has for this document, so the reviewer knows before sending."""
         document = own_document(document_id, user)
         destination = destination_of(store.team(user["team_id"]))
+        if destination in CRM_DESTINATIONS and not reaches_crm(user):
+            # A practice account never searches the real CRM; it sees only what its own practice sends made.
+            record = to_crm_record(document["fields"], document["doc_type"])
+            found = practice_matches(record, store.list_documents(user["team_id"]), document["id"])
+            crm = document["crm"] if (document["crm"] or {}).get("simulated") and sent_to(document["crm"]) == destination else {}
+            for kind, match in found.items():
+                if match:
+                    match["own"] = match["id"] == str(crm.get(f"{kind}_id") or "")
+            return {"available": True, "destination": destination, **found}
         # Through n8n alone there's no HubSpot token to search with, and a sheet has nothing to match.
         if destination == "hubspot" and settings["hubspot_token"]:
             lookup = hubspot_client
@@ -768,7 +854,9 @@ def create_app(
             return JSONResponse(status_code=422, content={"detail": f"Add a valid email before sending to {label}.", "missing": missing})
         if document["status"] == "failed":
             raise HTTPException(status_code=409, detail="Check the fields and save them before sending.")
-        same_place = sent_to(document["crm"]) == destination
+        practice = not team_reaches_crm(document["team_id"])
+        # A practice send and a real one are different places: a real account can send what was only practised.
+        same_place = sent_to(document["crm"]) == destination and bool((document["crm"] or {}).get("simulated")) == practice
         if document["status"] == "synced" and same_place:
             raise HTTPException(status_code=409, detail=f"This is already in {label}. Change a field to send it again.")
         enforce_limit("sync_user", user["id"])
@@ -780,6 +868,12 @@ def create_app(
         record = to_crm_record(fields, document["doc_type"])
         source_note = f"Imported by Inkfold from {document['filename']}."
         record["note"] = f"{record['note']}\n\n{source_note}" if record["note"] else source_note
+
+        if practice:
+            crm = {**practice_crm(record, destination, existing), "destination": destination}
+            store.add_sync_event(document["id"], "practice", "synced", practice_summary(record, destination), actor=user["email"])
+            store.update_document(document["id"], status="synced", crm=crm, error=None)
+            return full(store.get_document(document["id"]))
 
         if destination == "hubspot" and settings["n8n_webhook_url"]:
             payload = build_n8n_payload(

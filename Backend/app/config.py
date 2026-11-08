@@ -39,6 +39,9 @@ def load_settings():
         "jwt_secret": os.environ["JWT_SECRET"],
         "gemini_api_key": os.environ["GEMINI_API_KEY"],
         "extract_models": _list("GEMINI_EXTRACT_MODELS", DEFAULT_EXTRACT_MODELS),
+        # Accounts whose team sends to the real HubSpot, Pipedrive or Sheet. Everyone else, and every demo, gets a
+        # practice send that stays inside Inkfold. "*" means every signed-up account.
+        "crm_owner_emails": [email.lower() for email in _list("CRM_OWNER_EMAILS")],
         "hubspot_token": os.environ.get("HUBSPOT_TOKEN", ""),
         "hubspot_portal_id": os.environ.get("HUBSPOT_PORTAL_ID", ""),
         "hubspot_deal_stage": os.environ.get("HUBSPOT_DEAL_STAGE", "closedwon"),

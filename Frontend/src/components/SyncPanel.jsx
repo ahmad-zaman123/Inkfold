@@ -1,7 +1,7 @@
 import { formatDay, formatWhen, inTeam, who } from '../labels.js'
 import StatusPill from './StatusPill.jsx'
 
-const CHANNELS = { direct: 'HubSpot', n8n: 'n8n workflow', pipedrive: 'Pipedrive', sheets: 'Google Sheets' }
+const CHANNELS = { direct: 'HubSpot', n8n: 'n8n workflow', pipedrive: 'Pipedrive', sheets: 'Google Sheets', practice: 'Practice send' }
 const EVENT_LABELS = { sent: 'Sent', synced: 'Saved', failed: 'Failed' }
 const DESTINATION_LABELS = { hubspot: 'HubSpot', pipedrive: 'Pipedrive', sheets: 'Google Sheets' }
 // What each CRM calls the four records.
@@ -95,12 +95,19 @@ export default function SyncPanel({ document, user, matches, dirty, sending, err
         {sending || document.status === 'syncing' ? 'Sending...' : document.status === 'sync_failed' ? 'Try again' : duplicateDeal && !reason ? 'Send anyway' : `Send to ${label}`}
       </button>
       <p className="hint" aria-live="polite">{reason}</p>
+      {user?.practice_sends && document.destination && (
+        <p className="hint">This is a practice account: sending shows what {label} would get, but nothing leaves Inkfold.</p>
+      )}
       {error && <p className="banner error" role="alert">{error}</p>}
       {document.status === 'sync_failed' && document.error && !error && <p className="banner error">{document.error}</p>}
 
       {crm && (
         <div className="crm">
-          <p className="crm-title">{savedIn === 'sheets' ? 'In the sheet' : `Records in ${DESTINATION_LABELS[savedIn]}`}</p>
+          <p className="crm-title">
+            {crm.simulated
+              ? `Practice records (not in ${DESTINATION_LABELS[savedIn]})`
+              : savedIn === 'sheets' ? 'In the sheet' : `Records in ${DESTINATION_LABELS[savedIn]}`}
+          </p>
           <dl>
             {[[names[0], crm.contact_id], [names[1], crm.company_id], [names[2], crm.deal_id], [names[3], crm.note_id], ['Row', crm.row]]
               .filter(([, id]) => id)
