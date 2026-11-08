@@ -15,7 +15,14 @@ import Team from './pages/Team.jsx'
 // Where to go after signing in, from ?next=. Only a path on this site, so the link can't send anyone elsewhere.
 function nextPath(search) {
   const next = new URLSearchParams(search).get('next') || ''
-  return /^\/(?![/\\])/.test(next) ? next : '/'
+  if (!next.startsWith('/')) return '/'
+  try {
+    // Browsers read "/\x" and "/<tab>/x" as another site, so the address is resolved and kept only if it stays here.
+    const url = new URL(next, window.location.origin)
+    return url.origin === window.location.origin ? url.pathname + url.search + url.hash : '/'
+  } catch {
+    return '/'
+  }
 }
 
 export default function App() {
